@@ -1,0 +1,6 @@
+{
+    "email_relay": "mail.example.com",
+    "email_sender_username": "user@example.com",
+    "email_sender_fullname": "Оповещения об изменениях расписания",
+    "email_sender_password": "password"
+}

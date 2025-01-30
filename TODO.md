@@ -1,0 +1,3 @@
+- [ ] Add date to DB and use it in diff header
+- [ ] Support changes in group schedule
+- [ ] Find a way to have both full educator name and ease of diffing using JSON
