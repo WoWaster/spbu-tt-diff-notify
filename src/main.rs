@@ -155,27 +155,28 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for user in users.iter() {
         for educator in user.watch_educators.iter() {
-            match pretty_diffs.get(educator) {
-                None => (),
-                Some(diff) => {
-                    let email = Message::builder()
-                    .from(
-                        format!(
-                            "{} <{}>",
-                            config.email_sender_fullname, config.email_sender_username
-                        )
-                        .parse()?,
+            let Some(diff) = pretty_diffs.get(educator) else {
+                continue;
+            };
+            let email = Message::builder()
+                .from(
+                    format!(
+                        "{} <{}>",
+                        config.email_sender_fullname, config.email_sender_username
                     )
-                    .to(format!("{} <{}>", user.name, user.email).parse()?)
-                    .subject(format!("Изменилось расписание преподавателя {}!", educator)) // FIXME: Use name instead of id
-                    .body(format!("Уважаемый (ая), {}!\nВ расписании преподавателя {} произошли изменения:\n{}", user.name, educator, diff))?;
+                    .parse()?,
+                )
+                .to(format!("{} <{}>", user.name, user.email).parse()?)
+                .subject(format!("Изменилось расписание преподавателя {}!", educator)) // FIXME: Use name instead of id
+                .body(format!(
+                    "Уважаемый (ая), {}!\nВ расписании преподавателя {} произошли изменения:\n{}",
+                    user.name, educator, diff
+                ))?;
 
-                    let result = sender.send(&email);
-                    match result {
-                        Ok(code) => info!("Sent email to {} with response {:?}", user.name, code),
-                        Err(err) => return Err(Box::new(err)),
-                    }
-                }
+            let result = sender.send(&email);
+            match result {
+                Ok(code) => info!("Sent email to {} with response {:?}", user.name, code),
+                Err(err) => return Err(Box::new(err)),
             }
         }
     }
