@@ -46,6 +46,67 @@ struct Config {
     email_sender_password: String,
 }
 
+fn get_users(args: &Args) -> Result<Vec<User>, Box<dyn Error>> {
+    info!(
+        "Reading users.json from {}",
+        std::path::absolute(&args.users_json_path)?.display()
+    );
+    let users_file = fs::File::open(&args.users_json_path)?;
+    let users: Vec<User> = serde_json::from_reader(users_file)?;
+    log_all_users(&users);
+    Ok(users)
+}
+
+fn generate_sorts_of_educators(
+    watched_educators: &HashSet<u32>,
+    educators_in_db: &HashSet<u32>,
+) -> Result<(HashSet<u32>, HashSet<u32>, HashSet<u32>), Box<dyn Error>> {
+    let new_educators = watched_educators
+        .difference(educators_in_db)
+        .cloned()
+        .collect::<HashSet<_>>();
+    info!("Going to add {} new educators to db", new_educators.len());
+    let stable_educators = watched_educators
+        .intersection(educators_in_db)
+        .cloned()
+        .collect::<HashSet<_>>();
+    info!("Going to diff {} educators", stable_educators.len());
+    let stale_educators = educators_in_db
+        .difference(watched_educators)
+        .cloned()
+        .collect::<HashSet<_>>();
+    info!(
+        "Going to remove {} educators from db",
+        stale_educators.len()
+    );
+
+    Ok((new_educators, stale_educators, stable_educators))
+}
+
+fn generate_email(
+    config: &Config,
+    user: &User,
+    educator: &u32,
+    diff: &str,
+) -> Result<Message, Box<dyn Error>> {
+    let email = Message::builder()
+        .from(
+            format!(
+                "{} <{}>",
+                config.email_sender_fullname, config.email_sender_username
+            )
+            .parse()?,
+        )
+        .to(format!("{} <{}>", user.name, user.email).parse()?)
+        .subject(format!("Изменилось расписание преподавателя {}!", educator)) // FIXME: Use name instead of id
+        .body(format!(
+            "Уважаемый (ая) {}!\nВ расписании преподавателя {} произошли изменения:\n{}",
+            user.name, educator, diff
+        ))?;
+
+    Ok(email)
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     env_logger::builder()
         .target(env_logger::Target::Stdout)
@@ -54,13 +115,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let args = Args::parse();
 
-    info!(
-        "Reading users.json from {}",
-        std::path::absolute(&args.users_json_path)?.display()
-    );
-    let users_file = fs::File::open(args.users_json_path)?;
-    let users: Vec<User> = serde_json::from_reader(users_file)?;
-    log_all_users(&users);
+    let users = get_users(&args)?;
 
     let conn = init_connection(args.schedule_sqlite3_path)?;
 
@@ -73,24 +128,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         .cloned()
         .collect::<HashSet<_>>();
 
-    let new_educators = watched_educators
-        .difference(&educators_in_db)
-        .cloned()
-        .collect::<HashSet<_>>();
-    info!("Going to add {} new educators to db", new_educators.len());
-    let stable_educators = watched_educators
-        .intersection(&educators_in_db)
-        .cloned()
-        .collect::<HashSet<_>>();
-    info!("Going to diff {} educators", stable_educators.len());
-    let stale_educators = educators_in_db
-        .difference(&watched_educators)
-        .cloned()
-        .collect::<HashSet<_>>();
-    info!(
-        "Going to remove {} educators from db",
-        stale_educators.len()
-    );
+    let (new_educators, stale_educators, _stable_educators) =
+        generate_sorts_of_educators(&watched_educators, &educators_in_db)?;
 
     let http_client = reqwest::blocking::Client::new();
 
@@ -135,6 +174,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         update_educator_events_in_db(&conn, changed_educator_id, changed_educator_str)?;
         pretty_diffs.insert(changed_educator_id, changed_educator_diff);
     }
+    let pretty_diffs = pretty_diffs;
 
     let config: Config = Figment::new()
         .merge(Json::file(&args.config_json_path))
@@ -148,7 +188,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let sender = SmtpTransport::relay(&config.email_relay)?
         .credentials(Credentials::new(
             config.email_sender_username.to_owned(),
-            config.email_sender_password,
+            config.email_sender_password.to_owned(),
         ))
         .authentication(vec![Mechanism::Plain])
         .build();
@@ -158,23 +198,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             let Some(diff) = pretty_diffs.get(educator) else {
                 continue;
             };
-            let email = Message::builder()
-                .from(
-                    format!(
-                        "{} <{}>",
-                        config.email_sender_fullname, config.email_sender_username
-                    )
-                    .parse()?,
-                )
-                .to(format!("{} <{}>", user.name, user.email).parse()?)
-                .subject(format!("Изменилось расписание преподавателя {}!", educator)) // FIXME: Use name instead of id
-                .body(format!(
-                    "Уважаемый (ая), {}!\nВ расписании преподавателя {} произошли изменения:\n{}",
-                    user.name, educator, diff
-                ))?;
 
-            let result = sender.send(&email);
-            match result {
+            let email = generate_email(&config, user, educator, diff)?;
+            match sender.send(&email) {
                 Ok(code) => info!("Sent email to {} with response {:?}", user.name, code),
                 Err(err) => return Err(Box::new(err)),
             }
