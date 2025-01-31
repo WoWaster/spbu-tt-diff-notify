@@ -1,3 +1,4 @@
+//! Module with educator model compatible with timetable.spbu.ru's REST API
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Serialize)]

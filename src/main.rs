@@ -24,7 +24,7 @@ use lettre::{
     Message, SmtpTransport, Transport,
 };
 use log::info;
-use models::user_model::User;
+use models::User;
 use serde::Deserialize;
 
 #[derive(Parser, Debug)]

@@ -4,7 +4,7 @@ use log::{debug, info};
 use reqwest::blocking::Client;
 use similar::TextDiff;
 
-use crate::models::{educator_model::EducatorEvents, user_model::User};
+use crate::models::{educator_model::EducatorEvents, User};
 
 pub fn log_all_users(users: &[User]) -> () {
     for user in users.iter() {
