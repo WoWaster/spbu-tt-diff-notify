@@ -1,0 +1,11 @@
+[Unit]
+Description=Spbu Timetable changes notifier
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/spbu-tt-diff-notify
+ExecStart=/opt/spbu-tt-diff-notify/spbu-tt-diff-notify
+
+[Install]
+WantedBy=default.target

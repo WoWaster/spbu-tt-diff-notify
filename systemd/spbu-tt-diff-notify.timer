@@ -1,0 +1,8 @@
+[Unit]
+Description=Run Spbu Timetable changes notifier
+
+[Timer]
+OnCalendar=hourly
+
+[Install]
+WantedBy=timers.target
