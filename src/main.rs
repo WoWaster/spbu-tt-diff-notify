@@ -2,12 +2,7 @@ mod db;
 mod helpers;
 mod models;
 
-use std::{
-    collections::{HashMap, HashSet},
-    error::Error,
-    fs,
-    path::PathBuf,
-};
+use std::collections::{HashMap, HashSet};
 
 use clap::Parser;
 use db::{
@@ -19,124 +14,67 @@ use figment::{
     Figment,
 };
 use futures::future;
-use helpers::{find_diffs_in_events, get_educator_events_by_id, log_all_users};
+use helpers::{
+    find_diffs_in_events, generate_email, generate_sorts_of_educators, get_educator_events_by_id,
+    get_users,
+};
 use lettre::{
     transport::smtp::authentication::{Credentials, Mechanism},
-    Message, SmtpTransport, Transport,
+    SmtpTransport, Transport,
 };
 use log::info;
-use models::User;
-use serde::Deserialize;
-
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    #[arg(long, value_name = "FILE", default_value = "users.json")]
-    users_json_path: PathBuf,
-    #[arg(long, value_name = "FILE", default_value = "schedule.sqlite3")]
-    schedule_sqlite3_path: PathBuf,
-    #[arg(long, value_name = "FILE", default_value = "config.json")]
-    config_json_path: PathBuf,
-}
-
-#[derive(Deserialize)]
-struct Config {
-    email_relay: String,
-    email_sender_username: String,
-    email_sender_fullname: String,
-    email_sender_password: String,
-}
-
-fn get_users(args: &Args) -> Result<Vec<User>, Box<dyn Error>> {
-    info!(
-        "Reading users.json from {}",
-        std::path::absolute(&args.users_json_path)?.display()
-    );
-    let users_file = fs::File::open(&args.users_json_path)?;
-    let users: Vec<User> = serde_json::from_reader(users_file)?;
-    log_all_users(&users);
-    Ok(users)
-}
-
-fn generate_sorts_of_educators(
-    watched_educators: &HashSet<u32>,
-    educators_in_db: &HashSet<u32>,
-) -> Result<(HashSet<u32>, HashSet<u32>, HashSet<u32>), Box<dyn Error>> {
-    let new_educators = watched_educators
-        .difference(educators_in_db)
-        .cloned()
-        .collect::<HashSet<_>>();
-    info!("Going to add {} new educators to db", new_educators.len());
-    let stable_educators = watched_educators
-        .intersection(educators_in_db)
-        .cloned()
-        .collect::<HashSet<_>>();
-    info!("Going to diff {} educators", stable_educators.len());
-    let stale_educators = educators_in_db
-        .difference(watched_educators)
-        .cloned()
-        .collect::<HashSet<_>>();
-    info!(
-        "Going to remove {} educators from db",
-        stale_educators.len()
-    );
-
-    Ok((new_educators, stale_educators, stable_educators))
-}
-
-fn generate_email(
-    config: &Config,
-    user: &User,
-    educator: &u32,
-    diff: &str,
-) -> Result<Message, Box<dyn Error>> {
-    let email = Message::builder()
-        .from(
-            format!(
-                "{} <{}>",
-                config.email_sender_fullname, config.email_sender_username
-            )
-            .parse()?,
-        )
-        .to(format!("{} <{}>", user.name, user.email).parse()?)
-        .subject(format!("Изменилось расписание преподавателя {}!", educator)) // FIXME: Use name instead of id
-        .body(format!(
-            "Уважаемый (ая) {}!\nВ расписании преподавателя {} произошли изменения:\n{}",
-            user.name, educator, diff
-        ))?;
-
-    Ok(email)
-}
+use models::{Args, Config};
 
 #[tokio::main]
 async fn main() {
+    /* Setup logging */
     env_logger::builder()
         .target(env_logger::Target::Stdout)
         .filter_level(log::LevelFilter::Info)
         .init();
 
+    /* Get all the required resources */
     let args = Args::parse();
+    let conn = init_connection(&args.schedule_sqlite3_path).unwrap();
+    let http_client = reqwest::Client::new();
+    let config: Config = Figment::new()
+        .merge(Json::file(&args.config_json_path))
+        .merge(Env::prefixed("TT_"))
+        .extract()
+        .unwrap();
+    info!(
+        "Read config.json from {}",
+        std::path::absolute(&args.config_json_path)
+            .unwrap()
+            .display()
+    );
+    let sender = SmtpTransport::relay(&config.email_relay)
+        .unwrap()
+        .credentials(Credentials::new(
+            config.email_sender_username.to_owned(),
+            config.email_sender_password.to_owned(),
+        ))
+        .authentication(vec![Mechanism::Plain])
+        .build();
 
+    /* Get latest info about users wishes */
     let users = get_users(&args).unwrap();
-
-    let conn = init_connection(args.schedule_sqlite3_path).unwrap();
-
-    let educators_in_db = get_educators_ids_from_db(&conn).unwrap();
-    info!("Found {} educators in db", educators_in_db.len());
-
     let watched_educators = users
         .iter()
         .flat_map(|user| &user.watch_educators)
         .cloned()
         .collect::<HashSet<_>>();
 
+    /* Get info from db */
+    let educators_in_db = get_educators_ids_from_db(&conn).unwrap();
+    info!("Found {} educators in db", educators_in_db.len());
+
+    /* Get sorts of educators */
     let (new_educators, stale_educators, _stable_educators) =
         generate_sorts_of_educators(&watched_educators, &educators_in_db).unwrap();
 
-    let http_client = reqwest::Client::new();
-
+    /* Collect new info from timetable */
     let mut new_educator_events = HashMap::new();
-
     for json in future::join_all(
         watched_educators
             .into_iter()
@@ -158,6 +96,7 @@ async fn main() {
     let new_educator_events = new_educator_events;
     info!("Collected {} educator events", new_educator_events.len());
 
+    /* Add new educators into db */
     for new_educator in new_educators.into_iter() {
         add_new_educator_to_db(
             &conn,
@@ -167,10 +106,12 @@ async fn main() {
         .unwrap();
     }
 
+    /* Remove unwatched educators from db */
     for stale_educator in stale_educators.into_iter() {
         remove_educator_from_db(&conn, stale_educator).unwrap();
     }
 
+    /* Find out what changed */
     let old_educator_events = get_educators_from_db(&conn).unwrap();
 
     let changed_educators = find_diffs_in_events(&new_educator_events, &old_educator_events);
@@ -188,27 +129,7 @@ async fn main() {
     }
     let pretty_diffs = pretty_diffs;
 
-    let config: Config = Figment::new()
-        .merge(Json::file(&args.config_json_path))
-        .merge(Env::prefixed("TT_"))
-        .extract()
-        .unwrap();
-    info!(
-        "Read config.json from {}",
-        std::path::absolute(&args.config_json_path)
-            .unwrap()
-            .display()
-    );
-
-    let sender = SmtpTransport::relay(&config.email_relay)
-        .unwrap()
-        .credentials(Credentials::new(
-            config.email_sender_username.to_owned(),
-            config.email_sender_password.to_owned(),
-        ))
-        .authentication(vec![Mechanism::Plain])
-        .build();
-
+    /* Send emails */
     for user in users.iter() {
         for educator in user.watch_educators.iter() {
             let Some(diff) = pretty_diffs.get(educator) else {

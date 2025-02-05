@@ -2,10 +2,10 @@ use log::{debug, info};
 use rusqlite::{named_params, Connection};
 use std::{
     collections::{HashMap, HashSet},
-    path::PathBuf,
+    path::Path,
 };
 
-pub fn init_connection(db_path: PathBuf) -> Result<Connection, rusqlite::Error> {
+pub fn init_connection(db_path: &Path) -> Result<Connection, rusqlite::Error> {
     info!(
         "Connecting to schedule.sqlite3 in {}",
         std::path::absolute(&db_path).unwrap().display()
