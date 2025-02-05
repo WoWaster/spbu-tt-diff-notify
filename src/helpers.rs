@@ -22,7 +22,7 @@ pub fn log_all_users(users: &[User]) -> () {
 
 pub async fn get_educator_events_by_id(
     http_client: &Client,
-    id: u32,
+    id: i64,
 ) -> Result<EducatorEvents, reqwest::Error> {
     info!("Getting events for educator {}", id);
     let request_url = format!("https://timetable.spbu.ru/api/v1/educators/{}/events", id);
@@ -33,10 +33,10 @@ pub async fn get_educator_events_by_id(
 // Note to myself: this is probably the first time I have done some weird magic
 // TODO: read about lifetimes
 pub fn find_diffs_in_events<'a>(
-    new_events: &'a HashMap<u32, String>,
-    old_events: &HashMap<u32, String>,
-) -> HashMap<u32, (&'a str, String)> {
-    let mut out_map: HashMap<u32, (&str, String)> = HashMap::new();
+    new_events: &'a HashMap<i64, String>,
+    old_events: &HashMap<i64, String>,
+) -> HashMap<i64, (&'a str, String)> {
+    let mut out_map: HashMap<i64, (&str, String)> = HashMap::new();
 
     for (new_event_id, new_event_str) in new_events.iter() {
         let old_event_str = old_events.get(new_event_id).unwrap(); // unwrap here must be safe!
@@ -66,9 +66,9 @@ pub fn get_users(args: &Args) -> Result<Vec<User>, Box<dyn Error>> {
 }
 
 pub fn generate_sorts_of_educators(
-    watched_educators: &HashSet<u32>,
-    educators_in_db: &HashSet<u32>,
-) -> Result<(HashSet<u32>, HashSet<u32>, HashSet<u32>), Box<dyn Error>> {
+    watched_educators: &HashSet<i64>,
+    educators_in_db: &HashSet<i64>,
+) -> Result<(HashSet<i64>, HashSet<i64>, HashSet<i64>), Box<dyn Error>> {
     let new_educators = watched_educators
         .difference(educators_in_db)
         .cloned()
@@ -94,7 +94,7 @@ pub fn generate_sorts_of_educators(
 pub fn generate_email(
     config: &Config,
     user: &User,
-    educator: &u32,
+    educator: &i64,
     diff: &str,
 ) -> Result<Message, Box<dyn Error>> {
     let email = Message::builder()

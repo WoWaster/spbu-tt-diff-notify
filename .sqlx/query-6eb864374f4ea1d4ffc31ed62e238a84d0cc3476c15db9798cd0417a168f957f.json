@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE educator SET events = $2 WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "6eb864374f4ea1d4ffc31ed62e238a84d0cc3476c15db9798cd0417a168f957f"
+}

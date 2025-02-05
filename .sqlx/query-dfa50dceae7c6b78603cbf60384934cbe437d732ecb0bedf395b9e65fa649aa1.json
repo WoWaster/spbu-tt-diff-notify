@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO educator (id, events) VALUES ($1, $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "dfa50dceae7c6b78603cbf60384934cbe437d732ecb0bedf395b9e65fa649aa1"
+}

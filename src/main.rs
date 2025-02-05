@@ -35,7 +35,9 @@ async fn main() {
 
     /* Get all the required resources */
     let args = Args::parse();
-    let conn = init_connection(&args.schedule_sqlite3_path).unwrap();
+    let pool = init_connection(args.schedule_sqlite3_path.to_owned())
+        .await
+        .unwrap();
     let http_client = reqwest::Client::new();
     let config: Config = Figment::new()
         .merge(Json::file(&args.config_json_path))
@@ -66,7 +68,7 @@ async fn main() {
         .collect::<HashSet<_>>();
 
     /* Get info from db */
-    let educators_in_db = get_educators_ids_from_db(&conn).unwrap();
+    let educators_in_db = get_educators_ids_from_db(&pool).await.unwrap();
     info!("Found {} educators in db", educators_in_db.len());
 
     /* Get sorts of educators */
@@ -99,20 +101,23 @@ async fn main() {
     /* Add new educators into db */
     for new_educator in new_educators.into_iter() {
         add_new_educator_to_db(
-            &conn,
+            &pool,
             new_educator,
             new_educator_events.get(&new_educator).unwrap(), // unwrap here must be safe!
         )
+        .await
         .unwrap();
     }
 
     /* Remove unwatched educators from db */
     for stale_educator in stale_educators.into_iter() {
-        remove_educator_from_db(&conn, stale_educator).unwrap();
+        remove_educator_from_db(&pool, stale_educator)
+            .await
+            .unwrap();
     }
 
     /* Find out what changed */
-    let old_educator_events = get_educators_from_db(&conn).unwrap();
+    let old_educator_events = get_educators_from_db(&pool).await.unwrap();
 
     let changed_educators = find_diffs_in_events(&new_educator_events, &old_educator_events);
     info!(
@@ -120,11 +125,13 @@ async fn main() {
         changed_educators.len()
     );
 
-    let mut pretty_diffs: HashMap<u32, String> = HashMap::new();
+    let mut pretty_diffs: HashMap<i64, String> = HashMap::new();
     for (changed_educator_id, (changed_educator_str, changed_educator_diff)) in
         changed_educators.into_iter()
     {
-        update_educator_events_in_db(&conn, changed_educator_id, changed_educator_str).unwrap();
+        update_educator_events_in_db(&pool, changed_educator_id, changed_educator_str)
+            .await
+            .unwrap();
         pretty_diffs.insert(changed_educator_id, changed_educator_diff);
     }
     let pretty_diffs = pretty_diffs;

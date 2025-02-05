@@ -1,76 +1,88 @@
 use log::{debug, info};
-use rusqlite::{named_params, Connection};
+use sqlx::SqlitePool;
 use std::{
     collections::{HashMap, HashSet},
-    path::Path,
+    error::Error,
+    path::PathBuf,
 };
 
-pub fn init_connection(db_path: &Path) -> Result<Connection, rusqlite::Error> {
+const MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!();
+
+pub async fn init_connection(db_path: PathBuf) -> Result<SqlitePool, Box<dyn Error>> {
     info!(
         "Connecting to schedule.sqlite3 in {}",
         std::path::absolute(&db_path).unwrap().display()
     );
-    let conn = Connection::open(db_path)?;
+    let conn_str = format!("sqlite:{}", db_path.to_str().unwrap());
+    let pool = SqlitePool::connect(&conn_str).await?;
 
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS educator (
-                id INTEGER PRIMARY KEY,
-                events JSON NOT NULL
-            )",
-        (),
-    )?;
+    MIGRATOR.run(&pool).await?;
 
-    Ok(conn)
+    Ok(pool)
 }
 
-pub fn get_educators_from_db(conn: &Connection) -> Result<HashMap<u32, String>, rusqlite::Error> {
-    let mut stmt = conn.prepare_cached("SELECT id, events FROM educator")?;
-    let educator_info = stmt.query_map([], |row| {
-        let id: u32 = row.get(0)?;
-        let events: String = row.get(1)?;
-        Ok((id, events))
-    })?;
-    educator_info.into_iter().collect()
+pub async fn get_educators_from_db(
+    pool: &SqlitePool,
+) -> Result<HashMap<i64, String>, Box<dyn Error>> {
+    Ok(sqlx::query!("SELECT id, events FROM educator")
+        .map(|row| (row.id, row.events))
+        .fetch_all(pool)
+        .await?
+        .into_iter()
+        .collect::<HashMap<i64, String>>())
 }
 
-pub fn get_educators_ids_from_db(conn: &Connection) -> Result<HashSet<u32>, rusqlite::Error> {
-    let mut stmt = conn.prepare_cached("SELECT id FROM educator")?;
-    let ids = stmt.query_map([], |row| row.get(0))?;
-    ids.into_iter().collect()
+pub async fn get_educators_ids_from_db(pool: &SqlitePool) -> Result<HashSet<i64>, Box<dyn Error>> {
+    Ok(sqlx::query!("SELECT id FROM educator")
+        .map(|row| row.id)
+        .fetch_all(pool)
+        .await?
+        .into_iter()
+        .collect::<HashSet<i64>>())
 }
 
-pub fn add_new_educator_to_db(
-    conn: &Connection,
-    id: u32,
+pub async fn add_new_educator_to_db(
+    pool: &SqlitePool,
+    id: i64,
     educator_events: &str,
-) -> Result<(), rusqlite::Error> {
+) -> Result<(), Box<dyn Error>> {
     debug!("Adding educator {} to db", id);
 
-    let mut stmt =
-        conn.prepare_cached("INSERT INTO educator (id, events) VALUES (:id, :events)")?;
-    stmt.execute(named_params! {":id": id, ":events": educator_events})?;
+    sqlx::query!(
+        "INSERT INTO educator (id, events) VALUES ($1, $2)",
+        id,
+        educator_events
+    )
+    .execute(pool)
+    .await?;
 
     Ok(())
 }
 
-pub fn remove_educator_from_db(conn: &Connection, id: u32) -> Result<(), rusqlite::Error> {
+pub async fn remove_educator_from_db(pool: &SqlitePool, id: i64) -> Result<(), Box<dyn Error>> {
     debug!("Remove educator {} from db", id);
 
-    let mut stmt = conn.prepare_cached("DELETE FROM educator WHERE id = :id")?;
-    stmt.execute((id,))?;
+    sqlx::query!("DELETE FROM educator WHERE id = $1", id)
+        .execute(pool)
+        .await?;
 
     Ok(())
 }
 
-pub fn update_educator_events_in_db(
-    conn: &Connection,
-    id: u32,
+pub async fn update_educator_events_in_db(
+    pool: &SqlitePool,
+    id: i64,
     educator_events: &str,
-) -> Result<(), rusqlite::Error> {
+) -> Result<(), Box<dyn Error>> {
     debug!("Updating educator {} events in db", id);
 
-    let mut stmt = conn.prepare_cached("UPDATE educator SET events = :events WHERE id = :id")?;
-    stmt.execute(named_params! {":id": id, ":events": educator_events})?;
+    sqlx::query!(
+        "UPDATE educator SET events = $2 WHERE id = $1",
+        id,
+        educator_events
+    )
+    .execute(pool)
+    .await?;
 
     Ok(())
 }
