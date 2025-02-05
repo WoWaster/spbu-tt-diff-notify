@@ -3,30 +3,31 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Serialize)]
 #[serde(rename_all = "PascalCase")]
-struct EventLocation {
-    display_name: String,
+pub struct EventLocation {
+    pub display_name: String,
 }
 
 #[derive(Deserialize, Debug, Serialize)]
 #[serde(rename_all = "PascalCase")]
-struct DayStudyEvent {
-    time_interval_string: String,
-    subject: String,
-    dates: Vec<String>,
-    event_locations: Vec<EventLocation>,
+pub struct DayStudyEvent {
+    pub time_interval_string: String,
+    pub subject: String,
+    pub dates: Vec<String>,
+    pub event_locations: Vec<EventLocation>,
 }
 
 #[derive(Deserialize, Debug, Serialize)]
 #[serde(rename_all = "PascalCase")]
-struct EducatorDay {
-    day_string: String,
-    day_study_events_count: u8,
-    day_study_events: Vec<DayStudyEvent>,
+pub struct EducatorDay {
+    pub day_string: String,
+    pub day_study_events_count: u8,
+    pub day_study_events: Vec<DayStudyEvent>,
 }
 
 #[derive(Deserialize, Debug, Serialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct EducatorEvents {
-    educator_long_display_text: String,
-    educator_events_days: Vec<EducatorDay>,
+    pub educator_long_display_text: String,
+    pub educator_master_id: u32,
+    pub educator_events_days: Vec<EducatorDay>,
 }
