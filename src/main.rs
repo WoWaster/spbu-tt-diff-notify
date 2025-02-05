@@ -18,6 +18,7 @@ use figment::{
     providers::{Env, Format, Json},
     Figment,
 };
+use futures::future;
 use helpers::{find_diffs_in_events, get_educator_events_by_id, log_all_users};
 use lettre::{
     transport::smtp::authentication::{Credentials, Mechanism},
@@ -107,7 +108,8 @@ fn generate_email(
     Ok(email)
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     env_logger::builder()
         .target(env_logger::Target::Stdout)
         .filter_level(log::LevelFilter::Info)
@@ -131,18 +133,27 @@ fn main() {
     let (new_educators, stale_educators, _stable_educators) =
         generate_sorts_of_educators(&watched_educators, &educators_in_db).unwrap();
 
-    let http_client = reqwest::blocking::Client::new();
+    let http_client = reqwest::Client::new();
 
     let mut new_educator_events = HashMap::new();
-    for id in watched_educators.into_iter() {
+
+    for json in future::join_all(
+        watched_educators
+            .into_iter()
+            .map(|id| get_educator_events_by_id(&http_client, id)),
+    )
+    .await
+    .into_iter()
+    .collect::<Result<Vec<_>, _>>()
+    .unwrap()
+    {
         // This is kinda ugly hack!
         // We need only a small portion of original JSON and we need a formatted one,
         // so this is just a quick de-ser round.
         // FIXME: But this breaks final email, because educator can only be
         // referenced by id, despite having fullname field.
-        let json = get_educator_events_by_id(&http_client, id).unwrap();
         let educator_events_str = serde_json::to_string_pretty(&json).unwrap();
-        new_educator_events.insert(id, educator_events_str);
+        new_educator_events.insert(json.educator_master_id, educator_events_str);
     }
     let new_educator_events = new_educator_events;
     info!("Collected {} educator events", new_educator_events.len());

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use log::{debug, info};
-use reqwest::blocking::Client;
+use reqwest::Client;
 use similar::TextDiff;
 
 use crate::models::{educator_model::EducatorEvents, User};
@@ -15,14 +15,14 @@ pub fn log_all_users(users: &[User]) -> () {
     }
 }
 
-pub fn get_educator_events_by_id(
+pub async fn get_educator_events_by_id(
     http_client: &Client,
     id: u32,
 ) -> Result<EducatorEvents, reqwest::Error> {
     info!("Getting events for educator {}", id);
     let request_url = format!("https://timetable.spbu.ru/api/v1/educators/{}/events", id);
-    let response = http_client.get(request_url).send()?;
-    response.json()
+    let response = http_client.get(request_url).send().await?;
+    response.json().await
 }
 
 // Note to myself: this is probably the first time I have done some weird magic
