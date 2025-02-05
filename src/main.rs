@@ -107,7 +107,7 @@ fn generate_email(
     Ok(email)
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
     env_logger::builder()
         .target(env_logger::Target::Stdout)
         .filter_level(log::LevelFilter::Info)
@@ -115,11 +115,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let args = Args::parse();
 
-    let users = get_users(&args)?;
+    let users = get_users(&args).unwrap();
 
-    let conn = init_connection(args.schedule_sqlite3_path)?;
+    let conn = init_connection(args.schedule_sqlite3_path).unwrap();
 
-    let educators_in_db = get_educators_ids_from_db(&conn)?;
+    let educators_in_db = get_educators_ids_from_db(&conn).unwrap();
     info!("Found {} educators in db", educators_in_db.len());
 
     let watched_educators = users
@@ -129,7 +129,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .collect::<HashSet<_>>();
 
     let (new_educators, stale_educators, _stable_educators) =
-        generate_sorts_of_educators(&watched_educators, &educators_in_db)?;
+        generate_sorts_of_educators(&watched_educators, &educators_in_db).unwrap();
 
     let http_client = reqwest::blocking::Client::new();
 
@@ -140,8 +140,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         // so this is just a quick de-ser round.
         // FIXME: But this breaks final email, because educator can only be
         // referenced by id, despite having fullname field.
-        let json = get_educator_events_by_id(&http_client, id)?;
-        let educator_events_str = serde_json::to_string_pretty(&json)?;
+        let json = get_educator_events_by_id(&http_client, id).unwrap();
+        let educator_events_str = serde_json::to_string_pretty(&json).unwrap();
         new_educator_events.insert(id, educator_events_str);
     }
     let new_educator_events = new_educator_events;
@@ -152,14 +152,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             &conn,
             new_educator,
             new_educator_events.get(&new_educator).unwrap(), // unwrap here must be safe!
-        )?;
+        )
+        .unwrap();
     }
 
     for stale_educator in stale_educators.into_iter() {
-        remove_educator_from_db(&conn, stale_educator)?;
+        remove_educator_from_db(&conn, stale_educator).unwrap();
     }
 
-    let old_educator_events = get_educators_from_db(&conn)?;
+    let old_educator_events = get_educators_from_db(&conn).unwrap();
 
     let changed_educators = find_diffs_in_events(&new_educator_events, &old_educator_events);
     info!(
@@ -171,7 +172,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     for (changed_educator_id, (changed_educator_str, changed_educator_diff)) in
         changed_educators.into_iter()
     {
-        update_educator_events_in_db(&conn, changed_educator_id, changed_educator_str)?;
+        update_educator_events_in_db(&conn, changed_educator_id, changed_educator_str).unwrap();
         pretty_diffs.insert(changed_educator_id, changed_educator_diff);
     }
     let pretty_diffs = pretty_diffs;
@@ -179,13 +180,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     let config: Config = Figment::new()
         .merge(Json::file(&args.config_json_path))
         .merge(Env::prefixed("TT_"))
-        .extract()?;
+        .extract()
+        .unwrap();
     info!(
         "Read config.json from {}",
-        std::path::absolute(&args.config_json_path)?.display()
+        std::path::absolute(&args.config_json_path)
+            .unwrap()
+            .display()
     );
 
-    let sender = SmtpTransport::relay(&config.email_relay)?
+    let sender = SmtpTransport::relay(&config.email_relay)
+        .unwrap()
         .credentials(Credentials::new(
             config.email_sender_username.to_owned(),
             config.email_sender_password.to_owned(),
@@ -199,13 +204,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 continue;
             };
 
-            let email = generate_email(&config, user, educator, diff)?;
-            match sender.send(&email) {
-                Ok(code) => info!("Sent email to {} with response {:?}", user.name, code),
-                Err(err) => return Err(Box::new(err)),
-            }
+            let email = generate_email(&config, user, educator, diff).unwrap();
+            let code = sender.send(&email).unwrap();
+            info!("Sent email to {} with response {:?}", user.name, code);
         }
     }
-
-    Ok(())
 }
