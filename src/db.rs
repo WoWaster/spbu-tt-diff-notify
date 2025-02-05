@@ -57,7 +57,7 @@ pub fn remove_educator_from_db(conn: &Connection, id: u32) -> Result<(), rusqlit
     debug!("Remove educator {} from db", id);
 
     let mut stmt = conn.prepare_cached("DELETE FROM educator WHERE id = :id")?;
-    stmt.execute((":id", id))?;
+    stmt.execute((id,))?;
 
     Ok(())
 }
