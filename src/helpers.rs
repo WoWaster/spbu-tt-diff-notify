@@ -1,10 +1,6 @@
-use std::{
-    collections::{HashMap, HashSet},
-    error::Error,
-    fs,
-};
+use std::{collections::HashMap, error::Error, fs::File, io::BufReader};
 
-use lettre::Message;
+use lettre::{message::header::ContentType, Message};
 use log::{debug, info};
 use reqwest::Client;
 use similar::TextDiff;
@@ -20,81 +16,71 @@ pub fn log_all_users(users: &[User]) -> () {
     }
 }
 
-pub async fn get_educator_events_by_id(
-    http_client: &Client,
-    id: i64,
-) -> Result<EducatorEvents, reqwest::Error> {
-    info!("Getting events for educator {}", id);
-    let request_url = format!("https://timetable.spbu.ru/api/v1/educators/{}/events", id);
-    let response = http_client.get(request_url).send().await?;
-    response.json().await
-}
-
-// Note to myself: this is probably the first time I have done some weird magic
-// TODO: read about lifetimes
-pub fn find_diffs_in_events<'a>(
-    new_events: &'a HashMap<i64, String>,
-    old_events: &HashMap<i64, String>,
-) -> HashMap<i64, (&'a str, String)> {
-    let mut out_map: HashMap<i64, (&str, String)> = HashMap::new();
-
-    for (new_event_id, new_event_str) in new_events.iter() {
-        let old_event_str = old_events.get(new_event_id).unwrap(); // unwrap here must be safe!
-        let diff = TextDiff::from_lines(old_event_str, new_event_str);
-        if diff.ratio() != 1.0 {
-            let pretty_diff = diff.unified_diff();
-            debug!("Changes for {}: {}", new_event_id, pretty_diff);
-            out_map.insert(
-                *new_event_id,
-                (new_event_str.as_str(), pretty_diff.to_string()),
-            );
-        }
-    }
-
-    out_map
-}
-
 pub fn get_users(args: &Args) -> Result<Vec<User>, Box<dyn Error>> {
     info!(
         "Reading users.json from {}",
         std::path::absolute(&args.users_json_path)?.display()
     );
-    let users_file = fs::File::open(&args.users_json_path)?;
+    let users_file = BufReader::new(File::open(&args.users_json_path)?);
     let users: Vec<User> = serde_json::from_reader(users_file)?;
     log_all_users(&users);
     Ok(users)
 }
 
-pub fn generate_sorts_of_educators(
-    watched_educators: &HashSet<i64>,
-    educators_in_db: &HashSet<i64>,
-) -> Result<(HashSet<i64>, HashSet<i64>, HashSet<i64>), Box<dyn Error>> {
-    let new_educators = watched_educators
-        .difference(educators_in_db)
-        .cloned()
-        .collect::<HashSet<_>>();
-    info!("Going to add {} new educators to db", new_educators.len());
-    let stable_educators = watched_educators
-        .intersection(educators_in_db)
-        .cloned()
-        .collect::<HashSet<_>>();
-    info!("Going to diff {} educators", stable_educators.len());
-    let stale_educators = educators_in_db
-        .difference(watched_educators)
-        .cloned()
-        .collect::<HashSet<_>>();
+pub fn get_previous_events(args: &Args) -> Result<HashMap<u32, EducatorEvents>, Box<dyn Error>> {
     info!(
-        "Going to remove {} educators from db",
-        stale_educators.len()
+        "Reading previous events from {}",
+        std::path::absolute(&args.previous_events_json_path)?.display()
     );
+    if args.previous_events_json_path.exists() {
+        let events_file = BufReader::new(File::open(&args.previous_events_json_path)?);
+        let events: Vec<EducatorEvents> = serde_json::from_reader(events_file)?;
+        let events_hm = events
+            .into_iter()
+            .map(|educator| (educator.educator_master_id.to_owned(), educator))
+            .collect::<HashMap<_, _>>();
+        Ok(events_hm)
+    } else {
+        Ok(HashMap::new())
+    }
+}
 
-    Ok((new_educators, stale_educators, stable_educators))
+pub async fn get_educator_events_by_id(
+    http_client: &Client,
+    id: u32,
+) -> Result<(u32, EducatorEvents), reqwest::Error> {
+    info!("Getting events for educator {}", id);
+    let request_url = format!("https://timetable.spbu.ru/api/v1/educators/{}/events", id);
+    let response = http_client.get(request_url).send().await?;
+    let educator: EducatorEvents = response.json().await?;
+    Ok((educator.educator_master_id.to_owned(), educator))
+}
+
+pub fn find_diffs_in_events<'a>(
+    educators_old: &HashMap<u32, EducatorEvents>,
+    educators_new: &'a HashMap<u32, EducatorEvents>,
+) -> Result<HashMap<u32, (&'a EducatorEvents, String)>, Box<dyn Error>> {
+    let mut educators_changed: HashMap<u32, (&EducatorEvents, String)> = HashMap::new();
+
+    for (id, new_events) in educators_new.iter() {
+        if let Some(old_events) = educators_old.get(id) {
+            let old_events_json = serde_json::to_string_pretty(old_events)?;
+            let new_events_json = serde_json::to_string_pretty(new_events)?;
+            let diff = TextDiff::from_lines(&old_events_json, &new_events_json);
+            if diff.ratio() != 1.0 {
+                let pretty_diff = diff.unified_diff();
+                educators_changed.insert(id.to_owned(), (new_events, pretty_diff.to_string()));
+            }
+        }
+    }
+
+    Ok(educators_changed)
 }
 
 pub fn generate_email(
     config: &Config,
     user: &User,
-    educator: &i64,
+    events: &EducatorEvents,
     diff: &str,
 ) -> Result<Message, Box<dyn Error>> {
     let email = Message::builder()
@@ -106,11 +92,34 @@ pub fn generate_email(
             .parse()?,
         )
         .to(format!("{} <{}>", user.name, user.email).parse()?)
-        .subject(format!("Изменилось расписание преподавателя {}!", educator)) // FIXME: Use name instead of id
+        .subject(format!(
+            "Изменилось расписание преподавателя {}!",
+            events.educator_long_display_text
+        ))
+        .header(ContentType::TEXT_PLAIN)
         .body(format!(
             "Уважаемый (ая) {}!\nВ расписании преподавателя {} произошли изменения:\n{}",
-            user.name, educator, diff
+            user.name, events.educator_long_display_text, diff
         ))?;
 
     Ok(email)
+}
+
+pub fn write_previous_events(
+    args: &Args,
+    educator_events_new: HashMap<u32, EducatorEvents>,
+) -> Result<(), Box<dyn Error>> {
+    info!(
+        "Writing {} events to a {}",
+        educator_events_new.len(),
+        std::path::absolute(&args.previous_events_json_path)?.display()
+    );
+
+    let events = educator_events_new
+        .into_values()
+        .collect::<Vec<EducatorEvents>>();
+
+    let events_file = File::create(&args.previous_events_json_path)?;
+
+    Ok(serde_json::to_writer_pretty(events_file, &events)?)
 }

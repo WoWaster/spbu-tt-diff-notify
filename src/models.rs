@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{collections::HashSet, path::PathBuf};
 
 use clap::{command, Parser};
 use serde::{Deserialize, Serialize};
@@ -9,8 +9,8 @@ pub mod educator_model;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct User {
     pub name: String,
-    pub watch_educators: Vec<i64>,
-    pub watch_groups: Vec<i64>,
+    pub watch_educators: HashSet<u32>,
+    pub watch_groups: HashSet<u32>,
     pub email: String,
 }
 
@@ -19,10 +19,10 @@ pub struct User {
 pub struct Args {
     #[arg(long, value_name = "FILE", default_value = "users.json")]
     pub users_json_path: PathBuf,
-    #[arg(long, value_name = "FILE", default_value = "schedule.sqlite3")]
-    pub schedule_sqlite3_path: PathBuf,
     #[arg(long, value_name = "FILE", default_value = "config.json")]
     pub config_json_path: PathBuf,
+    #[arg(long, value_name = "FILE", default_value = "previous_events.json")]
+    pub previous_events_json_path: PathBuf,
 }
 
 #[derive(Deserialize)]
