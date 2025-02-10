@@ -3,6 +3,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Serialize)]
 #[serde(rename_all = "PascalCase")]
+pub struct ContingentUnitName {
+    pub item1: String,
+    pub item2: String,
+}
+
+#[derive(Deserialize, Debug, Serialize)]
+#[serde(rename_all = "PascalCase")]
 pub struct EventLocation {
     pub display_name: String,
 }
@@ -14,6 +21,7 @@ pub struct DayStudyEvent {
     pub subject: String,
     pub dates: Vec<String>,
     pub event_locations: Vec<EventLocation>,
+    pub contingent_unit_names: Vec<ContingentUnitName>,
 }
 
 #[derive(Deserialize, Debug, Serialize)]
