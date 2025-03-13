@@ -1,5 +1,5 @@
-use tt_diff::helpers;
-use tt_diff::models;
+use lib::tt_diff::helpers;
+use lib::tt_diff::models;
 
 use std::collections::{HashMap, HashSet};
 

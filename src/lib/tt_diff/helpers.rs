@@ -5,7 +5,7 @@ use log::{debug, info};
 use reqwest::Client;
 use similar::TextDiff;
 
-use crate::models::{educator_model::EducatorEvents, Args, Config, User};
+use crate::tt_diff::models::{educator_model::EducatorEvents, Args, Config, User};
 
 pub fn log_all_users(users: &[User]) -> () {
     for user in users.iter() {
