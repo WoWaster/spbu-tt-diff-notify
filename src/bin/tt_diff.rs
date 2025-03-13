@@ -1,5 +1,5 @@
-mod helpers;
-mod models;
+use tt_diff::helpers;
+use tt_diff::models;
 
 use std::collections::{HashMap, HashSet};
 
