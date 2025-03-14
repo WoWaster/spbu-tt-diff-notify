@@ -1,6 +1,6 @@
-use std::path::PathBuf;
 use clap::{command, Parser};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -26,4 +26,11 @@ pub struct Config {
     pub email_sender_username: String,
     pub email_sender_fullname: String,
     pub email_sender_password: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Table {
+    pub table_name: String,
+    pub link: String,
+    pub hash: String,
 }
