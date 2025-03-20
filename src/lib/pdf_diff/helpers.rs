@@ -70,14 +70,13 @@ pub fn generate_email(
 ) -> Result<Message, Box<dyn Error>> {
     let table_names: Vec<String> = watched_changes
         .iter()
-        .map(|(name, _)| name.clone())
+        .map(|(name, _)| format!("- {}", name))
         .collect();
-    let table_list = table_names.join(", ");
+    let table_list = table_names.join("\n");
     let body = format!(
-        "Уважаемый(ая) {}!
-        Следующие таблицы с расписаниями, которые вы отслеживаете, были изменены: {}.
-        Данное письмо было сгенерировано автоматически, направление ответа не подразумевается.
-        ",
+        "Уважаемый(ая) {}!\n\n\
+        Следующие таблицы с расписаниями, которые вы отслеживаете, были изменены:\n{}\n\n\
+        Данное письмо было сгенерировано автоматически, направление ответа не подразумевается.",
         user.name, table_list
     );
     let email = Message::builder()
