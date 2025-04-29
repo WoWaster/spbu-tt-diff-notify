@@ -10,7 +10,7 @@ use figment::{
 };
 use futures::future;
 use helpers::{
-    find_diffs_in_events, generate_email, get_educator_events_by_id, get_previous_events,
+    generate_diff_messages, generate_email, get_educator_events_by_id, get_previous_events,
     get_users, write_previous_events,
 };
 use lettre::{
@@ -63,7 +63,7 @@ async fn main() {
     let educator_events_old = get_previous_events(&args).unwrap();
     info!("Found {} educators in db", educator_events_old.len());
 
-    /* Collect new info from timetable */
+    /* Collect new info from timetable about all watched educators */
     let educator_events_new = future::join_all(
         watched_educators
             .into_iter()
@@ -75,9 +75,15 @@ async fn main() {
     .unwrap();
     info!("Collected {} educator events", educator_events_new.len());
 
-    /* Collect diffs */
-    let educators_changed =
+    /* Collect diffs and write them in string */
+    /*let educators_changed =
         find_diffs_in_events(&educator_events_old, &educator_events_new).unwrap();
+    info!(
+        "Found {} changed educators schedules",
+        educators_changed.len()
+    );*/
+
+    let educators_changed = generate_diff_messages(&educator_events_old, &educator_events_new);
     info!(
         "Found {} changed educators schedules",
         educators_changed.len()
