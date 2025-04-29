@@ -1,14 +1,14 @@
 //! Module with educator model compatible with timetable.spbu.ru's REST API
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Debug, Serialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "PascalCase")]
 pub struct ContingentUnitName {
     pub item1: String,
     pub item2: String,
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Debug, Serialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "PascalCase")]
 pub struct EventLocation {
     pub display_name: String,
