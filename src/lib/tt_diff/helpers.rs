@@ -1,11 +1,14 @@
-use std::{collections::HashMap, error::Error, fs::File, io::BufReader};
+use std::{collections::HashMap, error::Error, fs::File, hash::Hash, io::BufReader};
 
 use lettre::{message::header::ContentType, Message};
 use log::{debug, info};
 use reqwest::Client;
 use similar::TextDiff;
 
-use crate::tt_diff::models::{educator_model::EducatorEvents, Args, Config, User};
+use crate::tt_diff::models::{
+    /*educator_model::ContingentUnitName,*/ educator_model::DayStudyEvent,
+    educator_model::EducatorEvents, Args, Config, User,
+};
 
 pub fn log_all_users(users: &[User]) -> () {
     for user in users.iter() {
@@ -69,12 +72,141 @@ pub fn find_diffs_in_events<'a>(
             let diff = TextDiff::from_lines(&old_events_json, &new_events_json);
             if diff.ratio() != 1.0 {
                 let pretty_diff = diff.unified_diff();
+                /*println!("NEW DIFF:\n {}", pretty_diff);*/
                 educators_changed.insert(id.to_owned(), (new_events, pretty_diff.to_string()));
             }
         }
     }
 
     Ok(educators_changed)
+}
+
+/* form string of information about changed event */
+fn format_event_as_string(event: &DayStudyEvent) -> String {
+    format!(
+        "    <b>Предмет:</b> {}<br>    <b>Время:</b> {}<br>    <b>Даты:</b> {}<br>    <b>Места:</b> {}<br>    <b>Направления:</b> {}<br>",
+        event.subject,
+        event.time_interval_string,
+        event.dates.join(", "),
+        event
+            .event_locations
+            .iter()
+            .map(|loc| loc.display_name.clone())
+            .collect::<Vec<_>>()
+            .join(", "),
+        event
+            .contingent_unit_names
+            .iter()
+            .map(|c| format!("{} {}", c.item1, c.item2))
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
+}
+
+/* compare two Vec's with allowence of mixed order */
+pub fn vec_eq_unordered<T>(fst: &[T], snd: &[T]) -> bool
+where
+    T: Eq + Hash,
+{
+    if fst.len() != snd.len() {
+        return false;
+    }
+
+    let mut map_fst = HashMap::new();
+    for item in fst {
+        /* find int value corresponding to key "item" (or insert 0 if none), increment it */
+        *map_fst.entry(item).or_insert(0) += 1;
+    }
+
+    let mut map_snd = HashMap::new();
+    for item in snd {
+        *map_snd.entry(item).or_insert(0) += 1;
+    }
+
+    map_fst == map_snd
+}
+
+pub fn event_eq(new: &DayStudyEvent, old: &DayStudyEvent) -> bool {
+    new.time_interval_string == old.time_interval_string
+        && new.subject == old.subject
+        && vec_eq_unordered(&new.dates, &old.dates)
+        && vec_eq_unordered(&new.event_locations, &old.event_locations)
+        && vec_eq_unordered(&new.contingent_unit_names, &old.contingent_unit_names)
+}
+
+/* DEBUG, to delete later
+fn print_contingent_unit_names(units: &Vec<ContingentUnitName>) {
+    for (i, unit) in units.iter().enumerate() {
+        println!("{}. Item1: {}, Item2: {}", i + 1, unit.item1, unit.item2);
+    }
+}*/
+
+/* take old and new events hashmaps, for every educator for every day form  */
+pub fn generate_diff_messages<'a>(
+    educators_old: &'a HashMap<u32, EducatorEvents>,
+    educators_new: &'a HashMap<u32, EducatorEvents>,
+) -> HashMap<u32, (&'a EducatorEvents, String)> {
+    let mut educators_new_w_messages = HashMap::new();
+
+    for (&educator_id, new_events) in educators_new {
+        if let Some(old_events) = educators_old.get(&educator_id) {
+            let mut cur_educator_diff = Vec::new();
+
+            for new_day in &new_events.educator_events_days {
+                if let Some(old_day) = old_events
+                    .educator_events_days
+                    .iter()
+                    .find(|old_day| old_day.day_string == new_day.day_string)
+                {
+                    let mut cur_day_diff = Vec::new();
+
+                    for new_event in &new_day.day_study_events {
+                        if let Some(old_event) = old_day.day_study_events.iter().find(|old_ev| {
+                            old_ev.time_interval_string == new_event.time_interval_string
+                        }) {
+                            if !(event_eq(new_event, old_event)) {
+                                /*println!("OLD SUBJ {}", old_event.subject);
+                                println!("NEW SUBJ {}", new_event.subject);
+                                print_contingent_unit_names(&old_event.contingent_unit_names);
+                                print_contingent_unit_names(&new_event.contingent_unit_names);*/
+                                cur_day_diff.push(format_event_as_string(new_event));
+                            }
+                        } else {
+                            cur_day_diff.push(format_event_as_string(new_event));
+                        }
+                    }
+
+                    if !cur_day_diff.is_empty() {
+                        cur_educator_diff.push(format!(
+                            "<b><font size=\"5\">{}:</font></b><br>{}",
+                            new_day.day_string,
+                            cur_day_diff.join("<br>")
+                        ));
+                    }
+                } else {
+                    cur_educator_diff.push(format!(
+                        "<b><font size=\"5\">{}:<font size=\"10\"></b><br>{}",
+                        new_day.day_string,
+                        new_day
+                            .day_study_events
+                            .iter()
+                            .map(format_event_as_string)
+                            .collect::<Vec<_>>()
+                            .join("<br>")
+                    ));
+                }
+            }
+
+            if !cur_educator_diff.is_empty() {
+                educators_new_w_messages.insert(
+                    educator_id,
+                    (new_events, format!("{}", cur_educator_diff.join("<br>"))),
+                );
+            }
+        }
+    }
+
+    educators_new_w_messages
 }
 
 pub fn generate_email(
@@ -96,9 +228,9 @@ pub fn generate_email(
             "Изменилось расписание преподавателя {}!",
             events.educator_long_display_text
         ))
-        .header(ContentType::TEXT_PLAIN)
+        .header(ContentType::TEXT_HTML)
         .body(format!(
-            "Уважаемый (ая) {}!\nВ расписании преподавателя {} произошли изменения:\n{}",
+            "Уважаемый(ая) {}!<br><br>В расписании преподавателя <b>{}</b> произошли изменения:<br><br>{}<br>Данное письмо было сгенерировано автоматически, направление ответа не подразумевается.",
             user.name, events.educator_long_display_text, diff
         ))?;
 
