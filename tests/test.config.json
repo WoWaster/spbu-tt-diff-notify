@@ -1,0 +1,6 @@
+{
+    "email_relay": "smtp.mail.ru",
+    "email_sender_username": "diff_notification@mail.ru",
+    "email_sender_fullname": "Оповещения об изменениях расписания",
+    "email_sender_password": "pipi"
+}
