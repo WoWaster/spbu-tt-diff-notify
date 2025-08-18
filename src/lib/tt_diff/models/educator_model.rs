@@ -14,7 +14,7 @@ pub struct EventLocation {
     pub display_name: String,
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct DayStudyEvent {
     pub time_interval_string: String,
@@ -24,7 +24,7 @@ pub struct DayStudyEvent {
     pub contingent_unit_names: Vec<ContingentUnitName>,
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct EducatorDay {
     pub day_string: String,
@@ -32,7 +32,7 @@ pub struct EducatorDay {
     pub day_study_events: Vec<DayStudyEvent>,
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct EducatorEvents {
     pub educator_long_display_text: String,
