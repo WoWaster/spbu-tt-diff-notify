@@ -161,7 +161,7 @@ pub fn generate_diff_messages<'a>(
                     let mut cur_day_diff = Vec::new();
 
                     for new_event in &new_day.day_study_events {
-                        if let Some(old_event) = old_day.day_study_events.iter().find(|old_ev| {
+                        /*if let Some(old_event) = old_day.day_study_events.iter().find(|old_ev| {
                             old_ev.time_interval_string == new_event.time_interval_string
                         }) {
                             if !(event_eq(new_event, old_event)) {
@@ -172,6 +172,11 @@ pub fn generate_diff_messages<'a>(
                                 cur_day_diff.push(format_event_as_string(new_event));
                             }
                         } else {
+                            cur_day_diff.push(format_event_as_string(new_event));
+                        }*/
+                        if !old_day.day_study_events.iter().any(|old_ev| {
+                            event_eq(new_event, old_ev)
+                        }) {
                             cur_day_diff.push(format_event_as_string(new_event));
                         }
                     }
@@ -203,6 +208,24 @@ pub fn generate_diff_messages<'a>(
                     (new_events, format!("{}", cur_educator_diff.join("<br>"))),
                 );
             }
+        } else {
+            let mut cur_educator_diff = Vec::new();
+            for new_day in &new_events.educator_events_days {
+                cur_educator_diff.push(format!(
+                    "<b><font size=\"5\">{}:<font size=\"10\"></b><br>{}",
+                    new_day.day_string,
+                    new_day
+                        .day_study_events
+                        .iter()
+                        .map(format_event_as_string)
+                        .collect::<Vec<_>>()
+                        .join("<br>")
+                ));
+            }
+            educators_new_w_messages.insert(
+                educator_id,
+                (new_events, format!("{}", cur_educator_diff.join("<br>"))),
+            );
         }
     }
 
@@ -358,7 +381,7 @@ mod tests {
             educator_master_id: 1879,
             educator_events_days: vec![EducatorDay {
                 day_string: "Вторник".to_string(),
-                day_study_events_count: 2,
+                day_study_events_count: 1,
                 day_study_events: vec![DayStudyEvent {
                     time_interval_string: "09:00-10:30".to_string(),
                     subject: "От кубизма к супрематизму".to_string(),
@@ -400,7 +423,7 @@ mod tests {
         let diff = find_diffs_in_events(&educators_old, &educators_new).unwrap();
         // TODO: unreadable? prob insert it after formatting tests
         assert_eq!(diff.get(&1928).unwrap().1, "@@ -4,13 +4,14 @@\n   \"EducatorEventsDays\": [\n     {\n       \"DayString\": \"Понедельник\",\n-      \"DayStudyEventsCount\": 1,\n+      \"DayStudyEventsCount\": 2,\n       \"DayStudyEvents\": [\n         {\n           \"TimeIntervalString\": \"08:30-10:00\",\n           \"Subject\": \"Как превратить искусство в массовый продукт\",\n           \"Dates\": [\n-            \"01.09.1963\"\n+            \"01.09.1963\",\n+            \"08.09.1963\"\n           ],\n           \"EventLocations\": [\n             {\n@@ -21,6 +22,54 @@\n             {\n               \"Item1\": \"Группа\",\n               \"Item2\": \"101A\"\n+            },\n+            {\n+              \"Item1\": \"Группа\",\n+              \"Item2\": \"101B\"\n+            }\n+          ]\n+        },\n+        {\n+          \"TimeIntervalString\": \"10:15-11:45\",\n+          \"Subject\": \"Истоки поп-арта\",\n+          \"Dates\": [\n+            \"01.09.1968\",\n+            \"08.09.1968\"\n+          ],\n+          \"EventLocations\": [\n+            {\n+              \"DisplayName\": \"33 Union Square West\"\n+            }\n+          ],\n+          \"ContingentUnitNames\": [\n+            {\n+              \"Item1\": \"Группа\",\n+              \"Item2\": \"102B\"\n+            }\n+          ]\n+        }\n+      ]\n+    },\n+    {\n+      \"DayString\": \"Среда\",\n+      \"DayStudyEventsCount\": 1,\n+      \"DayStudyEvents\": [\n+        {\n+          \"TimeIntervalString\": \"13:00-14:30\",\n+          \"Subject\": \"Истоки поп-арта\",\n+          \"Dates\": [\n+            \"02.09.1968\",\n+            \"10.09.1968\"\n+          ],\n+          \"EventLocations\": [\n+            {\n+              \"DisplayName\": \"33 Union Square West\"\n+            }\n+          ],\n+          \"ContingentUnitNames\": [\n+            {\n+              \"Item1\": \"Группа\",\n+              \"Item2\": \"103C\"\n             }\n           ]\n         }\n");
-        assert_eq!(diff.get(&1879).unwrap().1, "@@ -10,6 +10,7 @@\n           \"TimeIntervalString\": \"09:00-10:30\",\n           \"Subject\": \"От кубизма к супрематизму\",\n           \"Dates\": [\n+            \"22.12.1915\",\n             \"29.12.1915\"\n           ],\n           \"EventLocations\": [\n@@ -27,6 +28,25 @@\n               \"Item2\": \"201B\"\n             }\n           ]\n+        },\n+        {\n+          \"TimeIntervalString\": \"11:00-12:30\",\n+          \"Subject\": \"Декларация прав художника\",\n+          \"Dates\": [\n+            \"15.08.1918\",\n+            \"22.08.1918\"\n+          ],\n+          \"EventLocations\": [\n+            {\n+              \"DisplayName\": \"Дворцовая площадь, д. 6/8\"\n+            }\n+          ],\n+          \"ContingentUnitNames\": [\n+            {\n+              \"Item1\": \"Группа\",\n+              \"Item2\": \"202A\"\n+            }\n+          ]\n         }\n       ]\n     }\n");
+        assert_eq!(diff.get(&1879).unwrap().1, "@@ -4,12 +4,13 @@\n   \"EducatorEventsDays\": [\n     {\n       \"DayString\": \"Вторник\",\n-      \"DayStudyEventsCount\": 1,\n+      \"DayStudyEventsCount\": 2,\n       \"DayStudyEvents\": [\n         {\n           \"TimeIntervalString\": \"09:00-10:30\",\n           \"Subject\": \"От кубизма к супрематизму\",\n           \"Dates\": [\n+            \"22.12.1915\",\n             \"29.12.1915\"\n           ],\n           \"EventLocations\": [\n@@ -27,6 +28,25 @@\n               \"Item2\": \"201B\"\n             }\n           ]\n+        },\n+        {\n+          \"TimeIntervalString\": \"11:00-12:30\",\n+          \"Subject\": \"Декларация прав художника\",\n+          \"Dates\": [\n+            \"15.08.1918\",\n+            \"22.08.1918\"\n+          ],\n+          \"EventLocations\": [\n+            {\n+              \"DisplayName\": \"Дворцовая площадь, д. 6/8\"\n+            }\n+          ],\n+          \"ContingentUnitNames\": [\n+            {\n+              \"Item1\": \"Группа\",\n+              \"Item2\": \"202A\"\n+            }\n+          ]\n         }\n       ]\n     }\n");
     }
 
     #[test]
@@ -497,4 +520,168 @@ mod tests {
         );
         assert!(!event_eq(&old, &new))
     }
+
+    /* Cases
+    only addition:
+    1. new day
+    2. old day, new event
+    3. old day, old event, new group
+    4. new educator
+    only deletion:
+    1. last event of the day
+    2. one of many events of the day
+    mixed:
+    1. same day, one addition, one deletion
+    2. different days, one addition, one deletion*/
+
+    /*
+    diff:   Среда:
+            Предмет: Истоки поп-арта
+            Время: 13:00-14:30
+            Даты: 02.09.1968, 10.09.1968
+            Места: 33 Union Square West
+            Направления: Группа 103C */
+    #[test]
+    fn generate_diff_messages_new_day() {
+        let args_old = Args {
+            users_json_path: PathBuf::from("tests/test.users.json"),
+            config_json_path: PathBuf::from("tests/test.config.json"),
+            previous_events_json_path: PathBuf::from("tests/test.less_events.json"),
+        };
+        let args_new = Args {
+            users_json_path: PathBuf::from("tests/test.users.json"),
+            config_json_path: PathBuf::from("tests/test.config.json"),
+            previous_events_json_path: PathBuf::from("tests/test.new_day.json"),
+        };
+
+        let old = get_previous_events(&args_old).unwrap();
+        let new = get_previous_events(&args_new).unwrap();
+        let diff = generate_diff_messages(&old, &new);
+        assert_eq!(diff.get(&1928).unwrap().1, "<b><font size=\"5\">Среда:<font size=\"10\"></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br>");
+        assert_eq!(diff.get(&1879), None);
+    }
+
+    /*
+    diff:   Понедельник:
+            Предмет: Истоки поп-арта
+            Время: 13:00-14:30
+            Даты: 02.09.1968, 10.09.1968
+            Места: 33 Union Square West
+            Направления: Группа 103C */
+    #[test]
+    fn generate_diff_messages_old_day_new_event() {
+        let args_old = Args {
+            users_json_path: PathBuf::from("tests/test.users.json"),
+            config_json_path: PathBuf::from("tests/test.config.json"),
+            previous_events_json_path: PathBuf::from("tests/test.less_events.json"),
+        };
+        let args_new = Args {
+            users_json_path: PathBuf::from("tests/test.users.json"),
+            config_json_path: PathBuf::from("tests/test.config.json"),
+            previous_events_json_path: PathBuf::from("tests/test.old_day_new_event.json"),
+        };
+
+        let old = get_previous_events(&args_old).unwrap();
+        let new = get_previous_events(&args_new).unwrap();
+        let diff = generate_diff_messages(&old, &new);
+        assert_eq!(diff.get(&1928).unwrap().1, "<b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br>");
+        assert_eq!(diff.get(&1879), None);
+    }
+    
+    /*
+    diff:   Понедельник:
+            Предмет: Как превратить искусство в массовый продукт
+            Время: 08:30-10:00
+            Даты: 01.09.1963
+            Места: 231 East 47th Street
+            Направления: Группа 101A, Группа 101B */
+    #[test]
+    fn generate_diff_messages_old_day_old_event_new_group() {
+        let args_old = Args {
+            users_json_path: PathBuf::from("tests/test.users.json"),
+            config_json_path: PathBuf::from("tests/test.config.json"),
+            previous_events_json_path: PathBuf::from("tests/test.less_events.json"),
+        };
+        let args_new = Args {
+            users_json_path: PathBuf::from("tests/test.users.json"),
+            config_json_path: PathBuf::from("tests/test.config.json"),
+            previous_events_json_path: PathBuf::from("tests/test.old_day_old_event_new_group.json"),
+        };
+
+        let old = get_previous_events(&args_old).unwrap();
+        let new = get_previous_events(&args_new).unwrap();
+        let diff = generate_diff_messages(&old, &new);
+        assert_eq!(diff.get(&1928).unwrap().1, "<b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A, Группа 101B<br>");
+        assert_eq!(diff.get(&1879), None);
+    }
+    
+    /*
+    diff:   Вторник:
+            Предмет: От кубизма к супрематизму
+            Время: 09:00-10:30
+            Даты: 29.12.1915
+            Места: Дворцовая площадь, д. 6/8
+            Направления: Группа 201A, Группа 201B */
+    #[test]
+    fn generate_diff_messages_new_educator() {
+        let args_old = Args {
+            users_json_path: PathBuf::from("tests/test.users.json"),
+            config_json_path: PathBuf::from("tests/test.config.json"),
+            previous_events_json_path: PathBuf::from("tests/test.only_warhol.json"),
+        };
+        let args_new = Args {
+            users_json_path: PathBuf::from("tests/test.users.json"),
+            config_json_path: PathBuf::from("tests/test.config.json"),
+            previous_events_json_path: PathBuf::from("tests/test.less_events.json"),
+        };
+
+        let old = get_previous_events(&args_old).unwrap();
+        let new = get_previous_events(&args_new).unwrap();
+        let diff = generate_diff_messages(&old, &new);
+        assert_eq!(diff.get(&1928), None);
+        assert_eq!(diff.get(&1879).unwrap().1, "<b><font size=\"5\">Вторник:<font size=\"10\"></b><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br>");
+    }
+
+    // TODO: what if EducatorEventsDays is empty? seems like timetable API does not allow it, but prob would be cleaner to add this case
+
+    /*#[test]
+    fn generate_diff_messages_delete_last_event_of_the_last_day() {
+        let args_old = Args {
+            users_json_path: PathBuf::from("tests/test.users.json"),
+            config_json_path: PathBuf::from("tests/test.config.json"),
+            previous_events_json_path: PathBuf::from("tests/test.less_events.json"),
+        };
+        let args_new = Args {
+            users_json_path: PathBuf::from("tests/test.users.json"),
+            config_json_path: PathBuf::from("tests/test.config.json"),
+            previous_events_json_path: PathBuf::from("tests/test.delete_last_event_of_the_last_day.json"),
+        };
+
+        let old = get_previous_events(&args_old).unwrap();
+        let new = get_previous_events(&args_new).unwrap();
+        let diff = generate_diff_messages(&old, &new);
+        assert_eq!(diff.get(&1928).unwrap().1, "<b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br>");
+        assert_eq!(diff.get(&1879), None);
+    }*/
+
+
+    /*#[test]
+    fn generate_diff_messages_from_less_to_many() {
+        let args_less = Args {
+            users_json_path: PathBuf::from("tests/test.users.json"),
+            config_json_path: PathBuf::from("tests/test.config.json"),
+            previous_events_json_path: PathBuf::from("tests/test.less_events.json"),
+        };
+        let args_many = Args {
+            users_json_path: PathBuf::from("tests/test.users.json"),
+            config_json_path: PathBuf::from("tests/test.config.json"),
+            previous_events_json_path: PathBuf::from("tests/test.many_events.json"),
+        };
+
+        let less = get_previous_events(&args_less).unwrap();
+        let many = get_previous_events(&args_many).unwrap();
+        let diff = generate_diff_messages(&less, &many);
+        assert_eq!(diff.get(&1928).unwrap().1, "<b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963, 08.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A, Группа 101B<br><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 10:15-11:45<br>    <b>Даты:</b> 01.09.1968, 08.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 102B<br><br><b><font size=\"5\">Среда:<font size=\"10\"></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br>");
+        assert_eq!(diff.get(&1879).unwrap().1, "<b><font size=\"5\">Вторник:</font></b><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 22.12.1915, 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br><br>    <b>Предмет:</b> Декларация прав художника<br>    <b>Время:</b> 11:00-12:30<br>    <b>Даты:</b> 15.08.1918, 22.08.1918<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 202A<br>");
+    }*/
 }
