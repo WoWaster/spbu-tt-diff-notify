@@ -174,9 +174,11 @@ pub fn generate_diff_messages<'a>(
                         } else {
                             cur_day_diff.push(format_event_as_string(new_event));
                         }*/
-                        if !old_day.day_study_events.iter().any(|old_ev| {
-                            event_eq(new_event, old_ev)
-                        }) {
+                        if !old_day
+                            .day_study_events
+                            .iter()
+                            .any(|old_ev| event_eq(new_event, old_ev))
+                        {
                             cur_day_diff.push(format_event_as_string(new_event));
                         }
                     }
@@ -587,7 +589,7 @@ mod tests {
         assert_eq!(diff.get(&1928).unwrap().1, "<b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br>");
         assert_eq!(diff.get(&1879), None);
     }
-    
+
     /*
     diff:   Понедельник:
             Предмет: Как превратить искусство в массовый продукт
@@ -614,7 +616,7 @@ mod tests {
         assert_eq!(diff.get(&1928).unwrap().1, "<b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A, Группа 101B<br>");
         assert_eq!(diff.get(&1879), None);
     }
-    
+
     /*
     diff:   Вторник:
             Предмет: От кубизма к супрематизму
@@ -663,7 +665,6 @@ mod tests {
         assert_eq!(diff.get(&1928).unwrap().1, "<b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br>");
         assert_eq!(diff.get(&1879), None);
     }*/
-
 
     /*#[test]
     fn generate_diff_messages_from_less_to_many() {
