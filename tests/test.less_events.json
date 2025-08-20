@@ -28,7 +28,7 @@
     "EducatorEventsDays": [
       {
         "DayString": "Вторник",
-        "DayStudyEventsCount": 2,
+        "DayStudyEventsCount": 1,
         "DayStudyEvents": [
           {
             "TimeIntervalString": "09:00-10:30",
