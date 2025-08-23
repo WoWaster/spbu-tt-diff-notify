@@ -1,4 +1,5 @@
 use lib::tt_diff::helpers;
+use lib::tt_diff::helpers::collect_all_tracked_diffs;
 use lib::tt_diff::models;
 
 use std::collections::{HashMap, HashSet};
@@ -75,14 +76,6 @@ async fn main() {
     .unwrap();
     info!("Collected {} educator events", educator_events_new.len());
 
-    /* Collect diffs and write them in string */
-    /*let educators_changed =
-        find_diffs_in_events(&educator_events_old, &educator_events_new).unwrap();
-    info!(
-        "Found {} changed educators schedules",
-        educators_changed.len()
-    );*/
-
     let educators_changed = generate_diff_messages(&educator_events_old, &educator_events_new);
     info!(
         "Found {} changed educators schedules",
@@ -91,12 +84,11 @@ async fn main() {
 
     /* Send emails */
     for user in users.iter() {
-        for educator in user.watch_educators.iter() {
-            if let Some((events, diff)) = educators_changed.get(educator) {
-                let email = generate_email(&config, user, events, diff).unwrap();
-                let code = sender.send(&email).unwrap();
-                info!("Sent email to {} with response {:?}", user.name, code);
-            }
+        let diff = collect_all_tracked_diffs(&educators_changed, user);
+        if diff.len() > 0 {
+            let email = generate_email(&config, user, &diff).unwrap();
+            let code = sender.send(&email).unwrap();
+            info!("Sent email to {} with response {:?}", user.name, code);
         }
     }
 
