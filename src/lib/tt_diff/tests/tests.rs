@@ -1,4 +1,7 @@
-use std::{collections::HashSet, path::PathBuf};
+use std::{
+    collections::{BTreeSet, HashSet},
+    path::PathBuf,
+};
 
 use crate::tt_diff::models::educator_model::{ContingentUnitName, EducatorDay, EventLocation};
 
@@ -63,39 +66,39 @@ fn get_prev_events_correct_json() {
     let warhol = EducatorEvents {
         educator_long_display_text: "Энди Уорхол".to_string(),
         educator_master_id: 1928,
-        educator_events_days: vec![EducatorDay {
+        educator_events_days: BTreeSet::from([EducatorDay {
             day_string: "Понедельник".to_string(),
             day_study_events_count: 1,
-            day_study_events: vec![DayStudyEvent {
+            day_study_events: BTreeSet::from([DayStudyEvent {
                 time_interval_string: "08:30-10:00".to_string(),
                 subject: "Как превратить искусство в массовый продукт".to_string(),
-                dates: vec!["01.09.1963".to_string()],
-                event_locations: vec![EventLocation {
+                dates: BTreeSet::from(["01.09.1963".to_string()]),
+                event_locations: BTreeSet::from([EventLocation {
                     display_name: "231 East 47th Street".to_string(),
-                }],
-                contingent_unit_names: vec![ContingentUnitName {
+                }]),
+                contingent_unit_names: BTreeSet::from([ContingentUnitName {
                     item1: "Группа".to_string(),
                     item2: "101A".to_string(),
-                }],
-            }],
-        }],
+                }]),
+            }]),
+        }]),
     };
     prev_ev_ref.insert(1928, warhol);
 
     let malevich = EducatorEvents {
         educator_long_display_text: "Казимир Малевич".to_string(),
         educator_master_id: 1879,
-        educator_events_days: vec![EducatorDay {
+        educator_events_days: BTreeSet::from([EducatorDay {
             day_string: "Вторник".to_string(),
             day_study_events_count: 1,
-            day_study_events: vec![DayStudyEvent {
+            day_study_events: BTreeSet::from([DayStudyEvent {
                 time_interval_string: "09:00-10:30".to_string(),
                 subject: "От кубизма к супрематизму".to_string(),
-                dates: vec!["29.12.1915".to_string()],
-                event_locations: vec![EventLocation {
+                dates: BTreeSet::from(["29.12.1915".to_string()]),
+                event_locations: BTreeSet::from([EventLocation {
                     display_name: "Дворцовая площадь, д. 6/8".to_string(),
-                }],
-                contingent_unit_names: vec![
+                }]),
+                contingent_unit_names: BTreeSet::from([
                     ContingentUnitName {
                         item1: "Группа".to_string(),
                         item2: "201A".to_string(),
@@ -104,9 +107,9 @@ fn get_prev_events_correct_json() {
                         item1: "Группа".to_string(),
                         item2: "201B".to_string(),
                     },
-                ],
-            }],
-        }],
+                ]),
+            }]),
+        }]),
     };
     prev_ev_ref.insert(1879, malevich);
     assert_eq!(prev_ev, prev_ev_ref);
@@ -138,44 +141,17 @@ fn format_event_as_string1() {
     let test_event = DayStudyEvent {
         time_interval_string: "09:30-11.00".to_string(),
         subject: "Матлогика".to_string(),
-        dates: vec!["01.09.2025".to_string()],
-        event_locations: vec![EventLocation {
+        dates: BTreeSet::from(["01.09.2025".to_string()]),
+        event_locations: BTreeSet::from([EventLocation {
             display_name: "Университетский пр. 28Д".to_string(),
-        }],
-        contingent_unit_names: vec![ContingentUnitName {
+        }]),
+        contingent_unit_names: BTreeSet::from([ContingentUnitName {
             item1: "Группа".to_string(),
             item2: "23.Б15-мм".to_string(),
-        }],
+        }]),
     };
     let formatted_event = format_event_as_string(&test_event);
     assert_eq!(formatted_event, "    <b>Предмет:</b> Матлогика<br>    <b>Время:</b> 09:30-11.00<br>    <b>Даты:</b> 01.09.2025<br>    <b>Места:</b> Университетский пр. 28Д<br>    <b>Направления:</b> Группа 23.Б15-мм<br>")
-}
-
-#[test]
-fn vec_eq_unordered_equal() {
-    let fst = [1, 2, 3];
-    assert!(vec_eq_unordered(&fst, &fst))
-}
-
-#[test]
-fn vec_eq_unordered_mixed_order() {
-    let fst = [3, 1, 2];
-    let snd = [1, 2, 3];
-    assert!(vec_eq_unordered(&fst, &snd))
-}
-
-#[test]
-fn vec_eq_unordered_unequal() {
-    let fst = [3, 3, 2];
-    let snd = [1, 2, 3];
-    assert!(!vec_eq_unordered(&fst, &snd))
-}
-
-#[test]
-fn vec_eq_unordered_dif_length() {
-    let fst = [3, 3];
-    let snd = [1, 2, 3];
-    assert!(!vec_eq_unordered(&fst, &snd))
 }
 
 #[test]

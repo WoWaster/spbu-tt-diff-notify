@@ -1,13 +1,13 @@
-use std::{collections::HashMap, error::Error, fs::File, hash::Hash, io::BufReader};
+use std::{collections::HashMap, error::Error, fs::File, io::BufReader};
 
+use itertools::Itertools;
 use lettre::{message::header::ContentType, Message};
 use log::{debug, info};
 use reqwest::Client;
 use similar::TextDiff;
 
 use crate::tt_diff::models::{
-    /*educator_model::ContingentUnitName,*/ educator_model::DayStudyEvent,
-    educator_model::EducatorEvents, Args, Config, User,
+    educator_model::DayStudyEvent, educator_model::EducatorEvents, Args, Config, User,
 };
 
 pub fn log_all_users(users: &[User]) -> () {
@@ -87,7 +87,7 @@ fn format_event_as_string(event: &DayStudyEvent) -> String {
         "    <b>Предмет:</b> {}<br>    <b>Время:</b> {}<br>    <b>Даты:</b> {}<br>    <b>Места:</b> {}<br>    <b>Направления:</b> {}<br>",
         event.subject,
         event.time_interval_string,
-        event.dates.join(", "),
+        event.dates.iter().join(", "),
         event
             .event_locations
             .iter()
@@ -103,43 +103,13 @@ fn format_event_as_string(event: &DayStudyEvent) -> String {
     )
 }
 
-/* compare two Vec's with allowence of mixed order */
-pub fn vec_eq_unordered<T>(fst: &[T], snd: &[T]) -> bool
-where
-    T: Eq + Hash,
-{
-    if fst.len() != snd.len() {
-        return false;
-    }
-
-    let mut map_fst = HashMap::new();
-    for item in fst {
-        /* find int value corresponding to key "item" (or insert 0 if none), increment it */
-        *map_fst.entry(item).or_insert(0) += 1;
-    }
-
-    let mut map_snd = HashMap::new();
-    for item in snd {
-        *map_snd.entry(item).or_insert(0) += 1;
-    }
-
-    map_fst == map_snd
-}
-
 pub fn event_eq(new: &DayStudyEvent, old: &DayStudyEvent) -> bool {
     new.time_interval_string == old.time_interval_string
         && new.subject == old.subject
-        && vec_eq_unordered(&new.dates, &old.dates)
-        && vec_eq_unordered(&new.event_locations, &old.event_locations)
-        && vec_eq_unordered(&new.contingent_unit_names, &old.contingent_unit_names)
+        && new.dates == old.dates
+        && new.event_locations == old.event_locations
+        && new.contingent_unit_names == old.contingent_unit_names
 }
-
-/* DEBUG, to delete later
-fn print_contingent_unit_names(units: &Vec<ContingentUnitName>) {
-    for (i, unit) in units.iter().enumerate() {
-        println!("{}. Item1: {}, Item2: {}", i + 1, unit.item1, unit.item2);
-    }
-}*/
 
 /* take old and new events hashmaps, for every educator for every day form  */
 pub fn generate_diff_messages<'a>(
