@@ -234,7 +234,10 @@ pub fn generate_diff_messages<'a>(
     educators_new_w_messages
 }
 
-pub fn collect_all_tracked_diffs(educators_changed: &HashMap<u32, (&EducatorEvents, String)>, user: &User) -> String {
+pub fn collect_all_tracked_diffs(
+    educators_changed: &HashMap<u32, (&EducatorEvents, String)>,
+    user: &User,
+) -> String {
     let mut acc: Vec<String> = Vec::new();
     for educator in user.watch_educators.iter() {
         if let Some((events, diff)) = educators_changed.get(educator) {
@@ -245,14 +248,10 @@ pub fn collect_all_tracked_diffs(educators_changed: &HashMap<u32, (&EducatorEven
             acc.push(cur_ed_diff);
         }
     }
-    return acc.join("<br> <br>")
+    return acc.join("<br> <br>");
 }
 
-pub fn generate_email(
-    config: &Config,
-    user: &User,
-    diff: &str,
-) -> Result<Message, Box<dyn Error>> {
+pub fn generate_email(config: &Config, user: &User, diff: &str) -> Result<Message, Box<dyn Error>> {
     let email = Message::builder()
         .from(
             format!(
@@ -263,7 +262,7 @@ pub fn generate_email(
         )
         .to(format!("{} <{}>", user.name, user.email).parse()?)
         .subject(format!(
-            "Изменилось расписание преподавателя!!"
+            "Изменилось расписание преподавателя!"
         ))
         .header(ContentType::TEXT_HTML)
         .body(format!("Уважаемый(ая) {}!<br><br> {} <br> Данное письмо было сгенерировано автоматически, направление ответа не подразумевается.", user.name, diff))?;
