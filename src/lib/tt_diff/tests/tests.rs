@@ -127,7 +127,6 @@ fn find_diffs_in_events1() {
     let educators_old = get_previous_events(&args_less).unwrap();
     let educators_new = get_previous_events(&args_many).unwrap();
     let diff = find_diffs_in_events(&educators_old, &educators_new).unwrap();
-    // TODO: unreadable? prob insert it after formatting tests
     let expected_1928 = include_str!("exp_find_diffs_in_events1_1928.txt");
     let expected_1879 = include_str!("exp_find_diffs_in_events1_1879.txt");
     assert_eq!(diff.get(&1928).unwrap().1, expected_1928);
@@ -348,4 +347,40 @@ fn generate_diff_messages_new_educator() {
     let diff = generate_diff_messages(&old, &new);
     assert_eq!(diff.get(&1928), None);
     assert_eq!(diff.get(&1879).unwrap().1, "<b><font size=\"5\">Вторник:<font size=\"10\"></b><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br>");
+}
+
+#[test]
+fn collect_all_tracked_diffs_multiple_diffs() {
+    let args_old = Args {
+        users_json_path: PathBuf::from("tests/test.users.json"),
+        config_json_path: PathBuf::from("example.config.json"),
+        previous_events_json_path: PathBuf::from("tests/test.less_events.json"),
+    };
+    let args_new = Args {
+        users_json_path: PathBuf::from("tests/test.users.json"),
+        config_json_path: PathBuf::from("example.config.json"),
+        previous_events_json_path: PathBuf::from("tests/test.many_events.json"),
+    };
+
+    let users = get_users(&args_new).unwrap();
+    let old = get_previous_events(&args_old).unwrap();
+    let new = get_previous_events(&args_new).unwrap();
+    let diff_test = generate_diff_messages(&old, &new);
+    let diff = collect_all_tracked_diffs(&diff_test, &users[0]);
+    assert_eq!(diff, "В расписании преподавателя <b>Казимир Малевич</b> произошли изменения:<br><br><b><font size=\"5\">Вторник:</font></b><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 22.12.1915, 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br><br>    <b>Предмет:</b> Декларация прав художника<br>    <b>Время:</b> 11:00-12:30<br>    <b>Даты:</b> 15.08.1918, 22.08.1918<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 202A<br><br><br> <br>В расписании преподавателя <b>Энди Уорхол</b> произошли изменения:<br><br><b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963, 08.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A, Группа 101B<br><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 10:15-11:45<br>    <b>Даты:</b> 01.09.1968, 08.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 102B<br><br><b><font size=\"5\">Среда:<font size=\"10\"></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br><br>")
+}
+
+#[test]
+fn collect_all_tracked_diffs_no_diffs() {
+    let args_old = Args {
+        users_json_path: PathBuf::from("tests/test.users.json"),
+        config_json_path: PathBuf::from("example.config.json"),
+        previous_events_json_path: PathBuf::from("tests/test.less_events.json"),
+    };
+
+    let users = get_users(&args_old).unwrap();
+    let old = get_previous_events(&args_old).unwrap();
+    let diff_test = generate_diff_messages(&old, &old);
+    let diff = collect_all_tracked_diffs(&diff_test, &users[0]);
+    assert_eq!(diff, "")
 }
