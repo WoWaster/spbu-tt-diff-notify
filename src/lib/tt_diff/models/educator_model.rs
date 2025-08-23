@@ -26,12 +26,12 @@ pub struct DayStudyEvent {
     pub contingent_unit_names: BTreeSet<ContingentUnitName>,
 }
 
-#[derive(Deserialize, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct EducatorDay {
     pub day_string: String,
     pub day_study_events_count: u8,
-    pub day_study_events: BTreeSet<DayStudyEvent>,
+    pub day_study_events: Vec<DayStudyEvent>,
 }
 
 #[derive(Deserialize, Debug, Serialize, PartialEq)]
@@ -39,5 +39,5 @@ pub struct EducatorDay {
 pub struct EducatorEvents {
     pub educator_long_display_text: String,
     pub educator_master_id: u32,
-    pub educator_events_days: BTreeSet<EducatorDay>,
+    pub educator_events_days: Vec<EducatorDay>,
 }
