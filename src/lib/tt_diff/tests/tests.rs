@@ -7,33 +7,6 @@ use crate::tt_diff::models::educator_model::{ContingentUnitName, EducatorDay, Ev
 
 use super::*;
 
-/*fn make_event(
-    time: &str,
-    subject: &str,
-    dates: Vec<&str>,
-    locations: Vec<&str>,
-    groups: Vec<&str>,
-) -> DayStudyEvent {
-    DayStudyEvent {
-        time_interval_string: time.to_string(),
-        subject: subject.to_string(),
-        dates: dates.into_iter().map(|d| d.to_string()).collect(),
-        event_locations: locations
-            .into_iter()
-            .map(|loc| EventLocation {
-                display_name: loc.to_string(),
-            })
-            .collect(),
-        contingent_unit_names: groups
-            .into_iter()
-            .map(|g| ContingentUnitName {
-                item1: "Группа".to_string(),
-                item2: g.to_string(),
-            })
-            .collect(),
-    }
-}*/
-
 #[test]
 fn get_users_valid_json() {
     let args = Args {
