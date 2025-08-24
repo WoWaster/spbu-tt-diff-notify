@@ -39,5 +39,5 @@ pub struct EducatorDay {
 pub struct EducatorEvents {
     pub educator_long_display_text: String,
     pub educator_master_id: u32,
-    pub educator_events_days: Vec<EducatorDay>,
+    pub educator_events_days: [EducatorDay; 6],
 }
