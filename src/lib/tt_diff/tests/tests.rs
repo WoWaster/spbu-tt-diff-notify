@@ -7,7 +7,7 @@ use crate::tt_diff::models::educator_model::{ContingentUnitName, EducatorDay, Ev
 
 use super::*;
 
-fn make_event(
+/*fn make_event(
     time: &str,
     subject: &str,
     dates: Vec<&str>,
@@ -32,7 +32,7 @@ fn make_event(
             })
             .collect(),
     }
-}
+}*/
 
 #[test]
 fn get_users_valid_json() {
@@ -116,27 +116,6 @@ fn get_prev_events_correct_json() {
 }
 
 #[test]
-fn find_diffs_in_events1() {
-    let args_less = Args {
-        users_json_path: PathBuf::from("tests/test.users.json"),
-        config_json_path: PathBuf::from("tests/test.config.json"),
-        previous_events_json_path: PathBuf::from("tests/test.less_events.json"),
-    };
-    let args_many = Args {
-        users_json_path: PathBuf::from("tests/test.users.json"),
-        config_json_path: PathBuf::from("tests/test.config.json"),
-        previous_events_json_path: PathBuf::from("tests/test.many_events.json"),
-    };
-    let educators_old = get_previous_events(&args_less).unwrap();
-    let educators_new = get_previous_events(&args_many).unwrap();
-    let diff = find_diffs_in_events(&educators_old, &educators_new).unwrap();
-    let expected_1928 = include_str!("exp_find_diffs_in_events1_1928.txt");
-    let expected_1879 = include_str!("exp_find_diffs_in_events1_1879.txt");
-    assert_eq!(diff.get(&1928).unwrap().1, expected_1928);
-    assert_eq!(diff.get(&1879).unwrap().1, expected_1879);
-}
-
-#[test]
 fn format_event_as_string1() {
     let test_event = DayStudyEvent {
         time_interval_string: "09:30-11.00".to_string(),
@@ -152,56 +131,6 @@ fn format_event_as_string1() {
     };
     let formatted_event = format_event_as_string(&test_event);
     assert_eq!(formatted_event, "    <b>Предмет:</b> Матлогика<br>    <b>Время:</b> 09:30-11.00<br>    <b>Даты:</b> 01.09.2025<br>    <b>Места:</b> Университетский пр. 28Д<br>    <b>Направления:</b> Группа 23.Б15-мм<br>")
-}
-
-#[test]
-fn event_eq_equal() {
-    let test_event = make_event(
-        "09:30-11.00",
-        "Матлогика",
-        vec!["01.09.2025", "03.09.2025"],
-        vec!["Университетский пр. 28Д", "Менделеевская л. 2"],
-        vec!["23.Б15-мм", "23.Б11-мм"],
-    );
-    assert!(event_eq(&test_event, &test_event))
-}
-
-#[test]
-fn event_eq_mixed_order() {
-    let old = make_event(
-        "09:30-11.00",
-        "Матлогика",
-        vec!["01.09.2025", "03.09.2025"],
-        vec!["Университетский пр. 28Д", "Менделеевская л. 2"],
-        vec!["23.Б15-мм", "23.Б11-мм"],
-    );
-    let new = make_event(
-        "09:30-11.00",
-        "Матлогика",
-        vec!["03.09.2025", "01.09.2025"],
-        vec!["Менделеевская л. 2", "Университетский пр. 28Д"],
-        vec!["23.Б11-мм", "23.Б15-мм"],
-    );
-    assert!(event_eq(&old, &new))
-}
-
-#[test]
-fn event_eq_unequal() {
-    let old = make_event(
-        "09:30-11.00",
-        "Матлогика",
-        vec!["01.09.2025", "03.09.2025"],
-        vec!["Университетский пр. 28Д", "Менделеевская л. 2"],
-        vec!["23.Б15-мм", "23.Б11-мм"],
-    );
-    let new = make_event(
-        "09:30-11.00",
-        "Матлогика",
-        vec!["03.09.2025", "01.09.2025"],
-        vec!["Менделеевская л. 2", "Университетский пр. 28Д"],
-        vec!["23.Б11-мм"],
-    );
-    assert!(!event_eq(&old, &new))
 }
 
 /* Cases

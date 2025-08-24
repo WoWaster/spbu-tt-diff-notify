@@ -4,7 +4,6 @@ use itertools::Itertools;
 use lettre::{message::header::ContentType, Message};
 use log::{debug, info};
 use reqwest::Client;
-use similar::TextDiff;
 
 use crate::tt_diff::models::{
     educator_model::DayStudyEvent, educator_model::EducatorEvents, Args, Config, User,
@@ -59,28 +58,6 @@ pub async fn get_educator_events_by_id(
     Ok((educator.educator_master_id.to_owned(), educator))
 }
 
-pub fn find_diffs_in_events<'a>(
-    educators_old: &HashMap<u32, EducatorEvents>,
-    educators_new: &'a HashMap<u32, EducatorEvents>,
-) -> Result<HashMap<u32, (&'a EducatorEvents, String)>, Box<dyn Error>> {
-    let mut educators_changed: HashMap<u32, (&EducatorEvents, String)> = HashMap::new();
-
-    for (id, new_events) in educators_new.iter() {
-        if let Some(old_events) = educators_old.get(id) {
-            let old_events_json = serde_json::to_string_pretty(old_events)?;
-            let new_events_json = serde_json::to_string_pretty(new_events)?;
-            let diff = TextDiff::from_lines(&old_events_json, &new_events_json);
-            if diff.ratio() != 1.0 {
-                let pretty_diff = diff.unified_diff();
-                /*println!("NEW DIFF:\n {}", pretty_diff);*/
-                educators_changed.insert(id.to_owned(), (new_events, pretty_diff.to_string()));
-            }
-        }
-    }
-
-    Ok(educators_changed)
-}
-
 /* form string of information about changed event */
 fn format_event_as_string(event: &DayStudyEvent) -> String {
     format!(
@@ -103,25 +80,20 @@ fn format_event_as_string(event: &DayStudyEvent) -> String {
     )
 }
 
-pub fn event_eq(new: &DayStudyEvent, old: &DayStudyEvent) -> bool {
-    new.time_interval_string == old.time_interval_string
-        && new.subject == old.subject
-        && new.dates == old.dates
-        && new.event_locations == old.event_locations
-        && new.contingent_unit_names == old.contingent_unit_names
-}
-
-/* take old and new events hashmaps, for every educator for every day form  */
+/* take old and new events hashmaps, for every educator for every day form string diffs, if any */
 pub fn generate_diff_messages<'a>(
     educators_old: &'a HashMap<u32, EducatorEvents>,
     educators_new: &'a HashMap<u32, EducatorEvents>,
 ) -> HashMap<u32, (&'a EducatorEvents, String)> {
     let mut educators_new_w_messages = HashMap::new();
 
+    /* for every new found educator look for old events, if there are none, insert all new days in diff */
     for (&educator_id, new_events) in educators_new {
         if let Some(old_events) = educators_old.get(&educator_id) {
             let mut cur_educator_diff = Vec::new();
 
+            /* for every new found day of current educator look for that day in old schedule via name equality,
+            if there are none, insert the whole day in diff */
             for new_day in &new_events.educator_events_days {
                 if let Some(old_day) = old_events
                     .educator_events_days
@@ -130,16 +102,18 @@ pub fn generate_diff_messages<'a>(
                 {
                     let mut cur_day_diff = Vec::new();
 
+                    /* for every new event of the day, if the same event does not exist in old schedule, insert that event in current day diff */
                     for new_event in &new_day.day_study_events {
                         if !old_day
                             .day_study_events
                             .iter()
-                            .any(|old_ev| event_eq(new_event, old_ev))
+                            .any(|old_ev| new_event == old_ev)
                         {
                             cur_day_diff.push(format_event_as_string(new_event));
                         }
                     }
 
+                    /* if acc for current day is not empty, push it into acc for week */
                     if !cur_day_diff.is_empty() {
                         cur_educator_diff.push(format!(
                             "<b><font size=\"5\">{}:</font></b><br>{}",
@@ -161,6 +135,7 @@ pub fn generate_diff_messages<'a>(
                 }
             }
 
+            /* if acc collecting all changes in a week is not empty, insert educator and their diff into map */
             if !cur_educator_diff.is_empty() {
                 educators_new_w_messages.insert(
                     educator_id,
