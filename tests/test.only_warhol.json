@@ -1,0 +1,25 @@
+[
+    {
+      "EducatorLongDisplayText": "Энди Уорхол",
+      "EducatorMasterId": 1928,
+      "EducatorEventsDays": [
+        {
+          "DayString": "Понедельник",
+          "DayStudyEventsCount": 1,
+          "DayStudyEvents": [
+            {
+              "TimeIntervalString": "08:30-10:00",
+              "Subject": "Как превратить искусство в массовый продукт",
+              "Dates": ["01.09.1963"],
+              "EventLocations": [
+                { "DisplayName": "231 East 47th Street" }
+              ],
+              "ContingentUnitNames": [
+                { "Item1": "Группа", "Item2": "101A" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]

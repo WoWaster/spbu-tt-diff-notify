@@ -1,5 +1,6 @@
-mod helpers;
-mod models;
+use lib::tt_diff::helpers;
+use lib::tt_diff::helpers::collect_all_tracked_diffs;
+use lib::tt_diff::models;
 
 use std::collections::{HashMap, HashSet};
 
@@ -10,7 +11,7 @@ use figment::{
 };
 use futures::future;
 use helpers::{
-    find_diffs_in_events, generate_email, get_educator_events_by_id, get_previous_events,
+    generate_diff_messages, generate_email, get_educator_events_by_id, get_previous_events,
     get_users, write_previous_events,
 };
 use lettre::{
@@ -63,7 +64,7 @@ async fn main() {
     let educator_events_old = get_previous_events(&args).unwrap();
     info!("Found {} educators in db", educator_events_old.len());
 
-    /* Collect new info from timetable */
+    /* Collect new info from timetable about all watched educators */
     let educator_events_new = future::join_all(
         watched_educators
             .into_iter()
@@ -75,9 +76,7 @@ async fn main() {
     .unwrap();
     info!("Collected {} educator events", educator_events_new.len());
 
-    /* Collect diffs */
-    let educators_changed =
-        find_diffs_in_events(&educator_events_old, &educator_events_new).unwrap();
+    let educators_changed = generate_diff_messages(&educator_events_old, &educator_events_new);
     info!(
         "Found {} changed educators schedules",
         educators_changed.len()
@@ -85,12 +84,11 @@ async fn main() {
 
     /* Send emails */
     for user in users.iter() {
-        for educator in user.watch_educators.iter() {
-            if let Some((events, diff)) = educators_changed.get(educator) {
-                let email = generate_email(&config, user, events, diff).unwrap();
-                let code = sender.send(&email).unwrap();
-                info!("Sent email to {} with response {:?}", user.name, code);
-            }
+        let diff = collect_all_tracked_diffs(&educators_changed, user);
+        if diff.len() > 0 {
+            let email = generate_email(&config, user, &diff).unwrap();
+            let code = sender.send(&email).unwrap();
+            info!("Sent email to {} with response {:?}", user.name, code);
         }
     }
 

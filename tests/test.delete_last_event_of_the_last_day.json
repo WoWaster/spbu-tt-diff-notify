@@ -1,0 +1,62 @@
+[
+    {
+      "EducatorLongDisplayText": "Энди Уорхол",
+      "EducatorMasterId": 1928,
+      "EducatorEventsDays": [
+        {
+          "DayString": "Понедельник",
+          "DayStudyEventsCount": 0,
+          "DayStudyEvents": []
+        },
+        {
+          "DayString": "Вторник",
+          "DayStudyEventsCount": 0,
+          "DayStudyEvents": []
+        },
+        {
+          "DayString": "Среда",
+          "DayStudyEventsCount": 0,
+          "DayStudyEvents": []
+        },
+        {
+          "DayString": "Четверг",
+          "DayStudyEventsCount": 0,
+          "DayStudyEvents": []
+        },
+        {
+          "DayString": "Пятница",
+          "DayStudyEventsCount": 0,
+          "DayStudyEvents": []
+        },
+        {
+          "DayString": "Суббота",
+          "DayStudyEventsCount": 0,
+          "DayStudyEvents": []
+        }
+      ]
+    },
+    {
+      "EducatorLongDisplayText": "Казимир Малевич",
+      "EducatorMasterId": 1879,
+      "EducatorEventsDays": [
+        {
+          "DayString": "Вторник",
+          "DayStudyEventsCount": 1,
+          "DayStudyEvents": [
+            {
+              "TimeIntervalString": "09:00-10:30",
+              "Subject": "От кубизма к супрематизму",
+              "Dates": ["29.12.1915"],
+              "EventLocations": [
+                { "DisplayName": "Дворцовая площадь, д. 6/8" }
+              ],
+              "ContingentUnitNames": [
+                { "Item1": "Группа", "Item2": "201A" },
+                { "Item1": "Группа", "Item2": "201B" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]

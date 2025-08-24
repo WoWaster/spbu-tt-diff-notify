@@ -64,3 +64,6 @@ rust-project.json
 users*.json
 config*.json
 previous_events*.json
+previous_pdf_states*.json
+example*.json
+tarpaulin-report.html
