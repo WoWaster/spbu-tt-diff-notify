@@ -123,7 +123,7 @@ pub fn generate_diff_messages<'a>(
                     }
                 } else {
                     cur_educator_diff.push(format!(
-                        "<b><font size=\"5\">{}:<font size=\"10\"></b><br>{}",
+                        "<b><font size=\"5\">{}:</font></b><br>{}",
                         new_day.day_string,
                         new_day
                             .day_study_events
@@ -145,16 +145,19 @@ pub fn generate_diff_messages<'a>(
         } else {
             let mut cur_educator_diff = Vec::new();
             for new_day in &new_events.educator_events_days {
-                cur_educator_diff.push(format!(
-                    "<b><font size=\"5\">{}:<font size=\"10\"></b><br>{}",
-                    new_day.day_string,
-                    new_day
-                        .day_study_events
-                        .iter()
-                        .map(format_event_as_string)
-                        .collect::<Vec<_>>()
-                        .join("<br>")
-                ));
+                // TODO: Check if this condition must be checked only here.
+                if new_day.day_study_events_count != 0 {
+                    cur_educator_diff.push(format!(
+                        "<b><font size=\"5\">{}:</font></b><br>{}",
+                        new_day.day_string,
+                        new_day
+                            .day_study_events
+                            .iter()
+                            .map(format_event_as_string)
+                            .collect::<Vec<_>>()
+                            .join("<br>")
+                    ));
+                }
             }
             educators_new_w_messages.insert(
                 educator_id,

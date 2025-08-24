@@ -7,6 +7,41 @@ use crate::tt_diff::models::educator_model::{ContingentUnitName, EducatorDay, Ev
 
 use super::*;
 
+fn generate_empty_educator_events_days() -> Vec<EducatorDay> {
+    vec![
+        EducatorDay {
+            day_string: "Понедельник".to_owned(),
+            day_study_events_count: 0,
+            day_study_events: BTreeSet::new(),
+        },
+        EducatorDay {
+            day_string: "Вторник".to_owned(),
+            day_study_events_count: 0,
+            day_study_events: BTreeSet::new(),
+        },
+        EducatorDay {
+            day_string: "Среда".to_owned(),
+            day_study_events_count: 0,
+            day_study_events: BTreeSet::new(),
+        },
+        EducatorDay {
+            day_string: "Четверг".to_owned(),
+            day_study_events_count: 0,
+            day_study_events: BTreeSet::new(),
+        },
+        EducatorDay {
+            day_string: "Пятница".to_owned(),
+            day_study_events_count: 0,
+            day_study_events: BTreeSet::new(),
+        },
+        EducatorDay {
+            day_string: "Суббота".to_owned(),
+            day_study_events_count: 0,
+            day_study_events: BTreeSet::new(),
+        },
+    ]
+}
+
 #[test]
 fn get_users_valid_json() {
     let args = Args {
@@ -36,53 +71,57 @@ fn get_prev_events_correct_json() {
 
     let mut prev_ev_ref: HashMap<u32, EducatorEvents> = HashMap::new();
 
+    let mut warhol_educator_events_days = generate_empty_educator_events_days();
+    warhol_educator_events_days[0] = EducatorDay {
+        day_string: "Понедельник".to_string(),
+        day_study_events_count: 1,
+        day_study_events: BTreeSet::from([DayStudyEvent {
+            time_interval_string: "08:30-10:00".to_string(),
+            subject: "Как превратить искусство в массовый продукт".to_string(),
+            dates: BTreeSet::from(["01.09.1963".to_string()]),
+            event_locations: BTreeSet::from([EventLocation {
+                display_name: "231 East 47th Street".to_string(),
+            }]),
+            contingent_unit_names: BTreeSet::from([ContingentUnitName {
+                item1: "Группа".to_string(),
+                item2: "101A".to_string(),
+            }]),
+        }]),
+    };
     let warhol = EducatorEvents {
         educator_long_display_text: "Энди Уорхол".to_string(),
         educator_master_id: 1928,
-        educator_events_days: vec![EducatorDay {
-            day_string: "Понедельник".to_string(),
-            day_study_events_count: 1,
-            day_study_events: BTreeSet::from([DayStudyEvent {
-                time_interval_string: "08:30-10:00".to_string(),
-                subject: "Как превратить искусство в массовый продукт".to_string(),
-                dates: BTreeSet::from(["01.09.1963".to_string()]),
-                event_locations: BTreeSet::from([EventLocation {
-                    display_name: "231 East 47th Street".to_string(),
-                }]),
-                contingent_unit_names: BTreeSet::from([ContingentUnitName {
-                    item1: "Группа".to_string(),
-                    item2: "101A".to_string(),
-                }]),
-            }]),
-        }],
+        educator_events_days: warhol_educator_events_days,
     };
     prev_ev_ref.insert(1928, warhol);
 
+    let mut malevich_educator_events_days = generate_empty_educator_events_days();
+    malevich_educator_events_days[1] = EducatorDay {
+        day_string: "Вторник".to_string(),
+        day_study_events_count: 1,
+        day_study_events: BTreeSet::from([DayStudyEvent {
+            time_interval_string: "09:00-10:30".to_string(),
+            subject: "От кубизма к супрематизму".to_string(),
+            dates: BTreeSet::from(["29.12.1915".to_string()]),
+            event_locations: BTreeSet::from([EventLocation {
+                display_name: "Дворцовая площадь, д. 6/8".to_string(),
+            }]),
+            contingent_unit_names: BTreeSet::from([
+                ContingentUnitName {
+                    item1: "Группа".to_string(),
+                    item2: "201A".to_string(),
+                },
+                ContingentUnitName {
+                    item1: "Группа".to_string(),
+                    item2: "201B".to_string(),
+                },
+            ]),
+        }]),
+    };
     let malevich = EducatorEvents {
         educator_long_display_text: "Казимир Малевич".to_string(),
         educator_master_id: 1879,
-        educator_events_days: vec![EducatorDay {
-            day_string: "Вторник".to_string(),
-            day_study_events_count: 1,
-            day_study_events: BTreeSet::from([DayStudyEvent {
-                time_interval_string: "09:00-10:30".to_string(),
-                subject: "От кубизма к супрематизму".to_string(),
-                dates: BTreeSet::from(["29.12.1915".to_string()]),
-                event_locations: BTreeSet::from([EventLocation {
-                    display_name: "Дворцовая площадь, д. 6/8".to_string(),
-                }]),
-                contingent_unit_names: BTreeSet::from([
-                    ContingentUnitName {
-                        item1: "Группа".to_string(),
-                        item2: "201A".to_string(),
-                    },
-                    ContingentUnitName {
-                        item1: "Группа".to_string(),
-                        item2: "201B".to_string(),
-                    },
-                ]),
-            }]),
-        }],
+        educator_events_days: malevich_educator_events_days,
     };
     prev_ev_ref.insert(1879, malevich);
     assert_eq!(prev_ev, prev_ev_ref);
@@ -142,7 +181,7 @@ fn generate_diff_messages_new_day() {
     let old = get_previous_events(&args_old).unwrap();
     let new = get_previous_events(&args_new).unwrap();
     let diff = generate_diff_messages(&old, &new);
-    assert_eq!(diff.get(&1928).unwrap().1, "<b><font size=\"5\">Среда:<font size=\"10\"></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br>");
+    assert_eq!(diff.get(&1928).unwrap().1, "<b><font size=\"5\">Среда:</font></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br>");
     assert_eq!(diff.get(&1879), None);
 }
 
@@ -223,8 +262,9 @@ fn generate_diff_messages_new_educator() {
     let old = get_previous_events(&args_old).unwrap();
     let new = get_previous_events(&args_new).unwrap();
     let diff = generate_diff_messages(&old, &new);
+    println!("{:?}", diff);
     assert_eq!(diff.get(&1928), None);
-    assert_eq!(diff.get(&1879).unwrap().1, "<b><font size=\"5\">Вторник:<font size=\"10\"></b><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br>");
+    assert_eq!(diff.get(&1879).unwrap().1, "<b><font size=\"5\">Вторник:</font></b><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br>");
 }
 
 #[test]
@@ -245,9 +285,11 @@ fn collect_all_tracked_diffs_multiple_diffs() {
     let new = get_previous_events(&args_new).unwrap();
     let diff_test = generate_diff_messages(&old, &new);
     let diff = collect_all_tracked_diffs(&diff_test, &users[0]);
+    println!("{}", diff);
     // method .iter() of HashSet takes educators in arbitrary order, which is no problem for resulting letter, but pain for testing
-    let malevich_first = "В расписании преподавателя <b>Казимир Малевич</b> произошли изменения:<br><br><b><font size=\"5\">Вторник:</font></b><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 22.12.1915, 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br><br>    <b>Предмет:</b> Декларация прав художника<br>    <b>Время:</b> 11:00-12:30<br>    <b>Даты:</b> 15.08.1918, 22.08.1918<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 202A<br><br><br> <br>В расписании преподавателя <b>Энди Уорхол</b> произошли изменения:<br><br><b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963, 08.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A, Группа 101B<br><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 10:15-11:45<br>    <b>Даты:</b> 01.09.1968, 08.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 102B<br><br><b><font size=\"5\">Среда:<font size=\"10\"></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br><br>";
-    let warhol_first = "В расписании преподавателя <b>Энди Уорхол</b> произошли изменения:<br><br><b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963, 08.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A, Группа 101B<br><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 10:15-11:45<br>    <b>Даты:</b> 01.09.1968, 08.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 102B<br><br><b><font size=\"5\">Среда:<font size=\"10\"></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br><br><br> <br>В расписании преподавателя <b>Казимир Малевич</b> произошли изменения:<br><br><b><font size=\"5\">Вторник:</font></b><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 22.12.1915, 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br><br>    <b>Предмет:</b> Декларация прав художника<br>    <b>Время:</b> 11:00-12:30<br>    <b>Даты:</b> 15.08.1918, 22.08.1918<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 202A<br><br>";
+    let malevich_first = "В расписании преподавателя <b>Казимир Малевич</b> произошли изменения:<br><br><b><font size=\"5\">Вторник:</font></b><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 22.12.1915, 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br><br>    <b>Предмет:</b> Декларация прав художника<br>    <b>Время:</b> 11:00-12:30<br>    <b>Даты:</b> 15.08.1918, 22.08.1918<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 202A<br><br><br> <br>В расписании преподавателя <b>Энди Уорхол</b> произошли изменения:<br><br><b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963, 08.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A, Группа 101B<br><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 10:15-11:45<br>    <b>Даты:</b> 01.09.1968, 08.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 102B<br><br><b><font size=\"5\">Среда:</font></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br><br>";
+    let warhol_first = "В расписании преподавателя <b>Энди Уорхол</b> произошли изменения:<br><br><b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963, 08.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A, Группа 101B<br><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 10:15-11:45<br>    <b>Даты:</b> 01.09.1968, 08.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 102B<br><br><b><font size=\"5\">Среда:</font></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br><br><br> <br>В расписании преподавателя <b>Казимир Малевич</b> произошли изменения:<br><br><b><font size=\"5\">Вторник:</font></b><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 22.12.1915, 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br><br>    <b>Предмет:</b> Декларация прав художника<br>    <b>Время:</b> 11:00-12:30<br>    <b>Даты:</b> 15.08.1918, 22.08.1918<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 202A<br><br>";
+    println!("{}", warhol_first);
     let diff_valid_mixed_educators_order = diff == malevich_first || diff == warhol_first;
     assert_eq!(diff_valid_mixed_educators_order, true)
 }
@@ -310,6 +352,6 @@ fn generate_diff_messages_many_days() {
     let old = get_previous_events(&args_old).unwrap();
     let new = get_previous_events(&args_new).unwrap();
     let diff = generate_diff_messages(&old, &new);
-    assert_eq!(diff.get(&1928).unwrap().1, "<b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963, 08.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A, Группа 101B<br><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 10:15-11:45<br>    <b>Даты:</b> 01.09.1968, 08.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 102B<br><br><b><font size=\"5\">Вторник:<font size=\"10\"></b><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 22.12.1915, 29.12.1915<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 201A, Группа 201B<br><br><b><font size=\"5\">Среда:<font size=\"10\"></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br>");
+    assert_eq!(diff.get(&1928).unwrap().1, "<b><font size=\"5\">Понедельник:</font></b><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963, 08.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A, Группа 101B<br><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 10:15-11:45<br>    <b>Даты:</b> 01.09.1968, 08.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 102B<br><br><b><font size=\"5\">Вторник:</font></b><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 22.12.1915, 29.12.1915<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 201A, Группа 201B<br><br><b><font size=\"5\">Среда:</font></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br>");
     assert_eq!(diff.get(&1879), None);
 }
