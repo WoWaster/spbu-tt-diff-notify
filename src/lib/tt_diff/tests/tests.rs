@@ -42,7 +42,7 @@ fn get_prev_events_correct_json() {
         educator_events_days: vec![EducatorDay {
             day_string: "Понедельник".to_string(),
             day_study_events_count: 1,
-            day_study_events: vec![DayStudyEvent {
+            day_study_events: BTreeSet::from([DayStudyEvent {
                 time_interval_string: "08:30-10:00".to_string(),
                 subject: "Как превратить искусство в массовый продукт".to_string(),
                 dates: BTreeSet::from(["01.09.1963".to_string()]),
@@ -53,7 +53,7 @@ fn get_prev_events_correct_json() {
                     item1: "Группа".to_string(),
                     item2: "101A".to_string(),
                 }]),
-            }],
+            }]),
         }],
     };
     prev_ev_ref.insert(1928, warhol);
@@ -64,7 +64,7 @@ fn get_prev_events_correct_json() {
         educator_events_days: vec![EducatorDay {
             day_string: "Вторник".to_string(),
             day_study_events_count: 1,
-            day_study_events: vec![DayStudyEvent {
+            day_study_events: BTreeSet::from([DayStudyEvent {
                 time_interval_string: "09:00-10:30".to_string(),
                 subject: "От кубизма к супрематизму".to_string(),
                 dates: BTreeSet::from(["29.12.1915".to_string()]),
@@ -81,7 +81,7 @@ fn get_prev_events_correct_json() {
                         item2: "201B".to_string(),
                     },
                 ]),
-            }],
+            }]),
         }],
     };
     prev_ev_ref.insert(1879, malevich);

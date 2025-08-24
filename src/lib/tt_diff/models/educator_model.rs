@@ -31,7 +31,7 @@ pub struct DayStudyEvent {
 pub struct EducatorDay {
     pub day_string: String,
     pub day_study_events_count: u8,
-    pub day_study_events: Vec<DayStudyEvent>,
+    pub day_study_events: BTreeSet<DayStudyEvent>,
 }
 
 #[derive(Deserialize, Debug, Serialize, PartialEq)]
