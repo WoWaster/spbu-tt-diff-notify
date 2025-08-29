@@ -83,6 +83,7 @@ fn format_event_as_string(event: &DayStudyEvent) -> String {
 
 fn add_day_to_diff(cur_educator_diff: &mut Vec<String>, educator_day: &EducatorDay) {
     if educator_day.day_study_events_count != 0 {
+        cur_educator_diff.push(format!("<em style=\"color:green;\">Новый день:</em>"));
         cur_educator_diff.push(format!(
             "<b><font size=\"5\">{}:</font></b><br>{}",
             educator_day.day_string,
@@ -97,24 +98,30 @@ fn add_day_to_diff(cur_educator_diff: &mut Vec<String>, educator_day: &EducatorD
 }
 
 fn diff_educator_day(
-    cur_educator_diff: &mut Vec<String>,
     old_day: &EducatorDay,
     new_day: &EducatorDay,
-) {
+) -> (Vec<String>, Vec<String>) {
     let old_events = &old_day.day_study_events;
     let new_events = &new_day.day_study_events;
 
     let added_events = new_events.difference(old_events);
     let removed_events = old_events.difference(new_events);
 
-    cur_educator_diff.push("<em>Удалённые события:</em>".to_string());
+    let mut removed_acc = Vec::new();
     for event in removed_events {
-        cur_educator_diff.push(format_event_as_string(event));
+        removed_acc.push(format_event_as_string(event));
     }
-    cur_educator_diff.push("<em>Новые события:</em>".to_string());
+    if removed_acc.len() > 0 {
+        removed_acc.insert(0, "<em style=\"color:red;\">Удалённые события:</em>".to_string())
+    }
+    let mut added_acc = Vec::new();
     for event in added_events {
-        cur_educator_diff.push(format_event_as_string(event));
+        added_acc.push(format_event_as_string(event));
+    };
+    if added_acc.len() > 0 {
+        added_acc.insert(0, "<em style=\"color:green;\">Новые события:</em>".to_string())
     }
+    return (removed_acc, added_acc)
 }
 
 fn add_tracked_educator_to_diff<'a>(
@@ -128,13 +135,21 @@ fn add_tracked_educator_to_diff<'a>(
         let new_day = &educator_new_events.educator_events_days[day];
 
         match old_day.day_study_events_count {
-            0 => add_day_to_diff(&mut cur_educator_diff, new_day),
+            0 => {
+                if !(new_day.day_study_events_count == 0) {
+                    add_day_to_diff(&mut cur_educator_diff, new_day)
+                }},
             _ => {
+                let (removed, added) = diff_educator_day(old_day, new_day);
+                let mut combined = added.clone();
+                combined.extend(removed);
+                if combined.len() > 0 {
                 cur_educator_diff.push(format!(
                     "<b><font size=\"5\">{}:</font></b>",
                     new_day.day_string,
-                ));
-                diff_educator_day(&mut cur_educator_diff, old_day, new_day);
+                )); 
+                cur_educator_diff.extend(combined);
+                }
             }
         }
     }
@@ -164,7 +179,9 @@ pub fn generate_diff_messages<'a>(
             Some(old_events) => add_tracked_educator_to_diff(old_events, new_events),
             None => add_untracked_educator_to_diff(new_events),
         };
-        educators_new_w_messages.insert(educator_id, (new_events, educator_diff.join("<br>")));
+        if educator_diff.len() > 0 {
+            educators_new_w_messages.insert(educator_id, (new_events, educator_diff.join("<br>")));
+        }
     }
 
     educators_new_w_messages
