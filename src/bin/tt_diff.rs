@@ -1,5 +1,4 @@
 use lib::tt_diff::helpers;
-use lib::tt_diff::helpers::collect_all_tracked_diffs;
 use lib::tt_diff::models;
 
 use std::collections::{HashMap, HashSet};
@@ -11,8 +10,8 @@ use figment::{
 };
 use futures::future;
 use helpers::{
-    generate_diff_messages, generate_email, get_educator_events_by_id, get_previous_events,
-    get_users, write_previous_events,
+    collect_all_tracked_diffs, generate_diff_messages, generate_email, get_educator_events_by_id,
+    get_previous_events, get_users, write_previous_events,
 };
 use lettre::{
     transport::smtp::authentication::{Credentials, Mechanism},
