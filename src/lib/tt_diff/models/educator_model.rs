@@ -19,8 +19,10 @@ pub struct EventLocation {
 #[derive(Deserialize, Debug, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "PascalCase")]
 pub struct DayStudyEvent {
-    pub time_interval_string: String,
+    pub start: String,
+    pub end: String,
     pub subject: String,
+    pub time_interval_string: String,
     pub dates: BTreeSet<String>,
     pub event_locations: BTreeSet<EventLocation>,
     pub contingent_unit_names: BTreeSet<ContingentUnitName>,
