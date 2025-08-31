@@ -97,10 +97,7 @@ fn add_day_to_diff(cur_educator_diff: &mut Vec<String>, educator_day: &EducatorD
     }
 }
 
-fn diff_educator_day(
-    old_day: &EducatorDay,
-    new_day: &EducatorDay,
-) -> (Vec<String>, Vec<String>) {
+fn diff_educator_day(old_day: &EducatorDay, new_day: &EducatorDay) -> (Vec<String>, Vec<String>) {
     let old_events = &old_day.day_study_events;
     let new_events = &new_day.day_study_events;
 
@@ -112,16 +109,22 @@ fn diff_educator_day(
         removed_acc.push(format_event_as_string(event));
     }
     if removed_acc.len() > 0 {
-        removed_acc.insert(0, "<em style=\"color:red;\">Удалённые события:</em>".to_string())
+        removed_acc.insert(
+            0,
+            "<em style=\"color:red;\">Удалённые события:</em>".to_string(),
+        )
     }
     let mut added_acc = Vec::new();
     for event in added_events {
         added_acc.push(format_event_as_string(event));
-    };
-    if added_acc.len() > 0 {
-        added_acc.insert(0, "<em style=\"color:green;\">Новые события:</em>".to_string())
     }
-    return (removed_acc, added_acc)
+    if added_acc.len() > 0 {
+        added_acc.insert(
+            0,
+            "<em style=\"color:green;\">Новые события:</em>".to_string(),
+        )
+    }
+    return (removed_acc, added_acc);
 }
 
 fn add_tracked_educator_to_diff<'a>(
@@ -138,17 +141,18 @@ fn add_tracked_educator_to_diff<'a>(
             0 => {
                 if !(new_day.day_study_events_count == 0) {
                     add_day_to_diff(&mut cur_educator_diff, new_day)
-                }},
+                }
+            }
             _ => {
                 let (removed, added) = diff_educator_day(old_day, new_day);
                 let mut combined = added.clone();
                 combined.extend(removed);
                 if combined.len() > 0 {
-                cur_educator_diff.push(format!(
-                    "<b><font size=\"5\">{}:</font></b>",
-                    new_day.day_string,
-                )); 
-                cur_educator_diff.extend(combined);
+                    cur_educator_diff.push(format!(
+                        "<b><font size=\"5\">{}:</font></b>",
+                        new_day.day_string,
+                    ));
+                    cur_educator_diff.extend(combined);
                 }
             }
         }
