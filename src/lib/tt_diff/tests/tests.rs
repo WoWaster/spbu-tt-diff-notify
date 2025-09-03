@@ -77,6 +77,8 @@ fn get_prev_events_correct_json() {
         day_study_events_count: 1,
         day_study_events: BTreeSet::from([DayStudyEvent {
             time_interval_string: "08:30-10:00".to_string(),
+            start: "08:30".to_string(),
+            end: "10:00".to_string(),
             subject: "Как превратить искусство в массовый продукт".to_string(),
             dates: BTreeSet::from(["01.09.1963".to_string()]),
             event_locations: BTreeSet::from([EventLocation {
@@ -101,6 +103,8 @@ fn get_prev_events_correct_json() {
         day_study_events_count: 1,
         day_study_events: BTreeSet::from([DayStudyEvent {
             time_interval_string: "09:00-10:30".to_string(),
+            start: "09:00".to_string(),
+            end: "10:30".to_string(),
             subject: "От кубизма к супрематизму".to_string(),
             dates: BTreeSet::from(["29.12.1915".to_string()]),
             event_locations: BTreeSet::from([EventLocation {
@@ -131,6 +135,8 @@ fn get_prev_events_correct_json() {
 fn format_event_as_string1() {
     let test_event = DayStudyEvent {
         time_interval_string: "09:30-11.00".to_string(),
+        start: "09:30".to_string(),
+        end: "11:00".to_string(),
         subject: "Матлогика".to_string(),
         dates: BTreeSet::from(["01.09.2025".to_string()]),
         event_locations: BTreeSet::from([EventLocation {

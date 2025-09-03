@@ -9,6 +9,8 @@
         "DayStudyEvents": [
           {
             "TimeIntervalString": "08:30-10:00",
+            "Start": "08:30",
+            "End": "10:00",
             "Subject": "Как превратить искусство в массовый продукт",
             "Dates": [
               "01.09.1963",
@@ -32,6 +34,8 @@
           },
           {
             "TimeIntervalString": "10:15-11:45",
+            "Start": "10:15",
+            "End": "11:45",
             "Subject": "Истоки поп-арта",
             "Dates": [
               "01.09.1968",
@@ -62,6 +66,8 @@
         "DayStudyEvents": [
           {
             "TimeIntervalString": "13:00-14:30",
+            "Start": "13:00",
+            "End": "14:30",
             "Subject": "Истоки поп-арта",
             "Dates": [
               "02.09.1968",
@@ -113,6 +119,8 @@
         "DayStudyEvents": [
           {
             "TimeIntervalString": "09:00-10:30",
+            "Start": "09:00",
+            "End": "10:30",
             "Subject": "От кубизма к супрематизму",
             "Dates": [
               "22.12.1915",
@@ -136,6 +144,8 @@
           },
           {
             "TimeIntervalString": "11:00-12:30",
+            "Start": "11:00",
+            "End": "12:30",
             "Subject": "Декларация прав художника",
             "Dates": [
               "15.08.1918",

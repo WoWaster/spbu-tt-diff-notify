@@ -9,6 +9,8 @@
         "DayStudyEvents": [
           {
             "TimeIntervalString": "08:30-10:00",
+            "Start": "08:30",
+            "End": "10:00",
             "Subject": "Как превратить искусство в массовый продукт",
             "Dates": [
               "01.09.1963"
