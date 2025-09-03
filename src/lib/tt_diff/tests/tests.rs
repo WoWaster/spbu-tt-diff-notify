@@ -69,7 +69,7 @@ fn get_prev_events_correct_json() {
 
     let prev_ev = get_previous_events(&args).unwrap();
 
-    let mut prev_ev_ref: HashMap<u32, EducatorEvents> = HashMap::new();
+    let mut prev_ev_ref = HashMap::new();
 
     let mut warhol_educator_events_days = generate_empty_educator_events_days();
     warhol_educator_events_days[0] = EducatorDay {
@@ -129,6 +129,18 @@ fn get_prev_events_correct_json() {
     };
     prev_ev_ref.insert(1879, malevich);
     assert_eq!(prev_ev, prev_ev_ref);
+}
+
+#[test]
+fn get_prev_events_non_existent_json() {
+    let args = Args {
+        users_json_path: PathBuf::from("tests/test.users.json"),
+        config_json_path: PathBuf::from("tests/test.config.json"),
+        previous_events_json_path: PathBuf::from("non_existent.json"),
+    };
+    let test_map = get_previous_events(&args).unwrap();
+    let ref_map = HashMap::new();
+    assert_eq!(test_map, ref_map)
 }
 
 #[test]
