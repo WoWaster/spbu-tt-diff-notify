@@ -1,25 +1,59 @@
 [
-    {
-      "EducatorLongDisplayText": "Энди Уорхол",
-      "EducatorMasterId": 1928,
-      "EducatorEventsDays": [
-        {
-          "DayString": "Понедельник",
-          "DayStudyEventsCount": 1,
-          "DayStudyEvents": [
-            {
-              "TimeIntervalString": "08:30-10:00",
-              "Subject": "Как превратить искусство в массовый продукт",
-              "Dates": ["01.09.1963"],
-              "EventLocations": [
-                { "DisplayName": "231 East 47th Street" }
-              ],
-              "ContingentUnitNames": [
-                { "Item1": "Группа", "Item2": "101A" }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
+  {
+    "EducatorLongDisplayText": "Энди Уорхол",
+    "EducatorMasterId": 1928,
+    "EducatorEventsDays": [
+      {
+        "DayString": "Понедельник",
+        "DayStudyEventsCount": 1,
+        "DayStudyEvents": [
+          {
+            "TimeIntervalString": "08:30-10:00",
+            "Start": "08:30",
+            "End": "10:00",
+            "Subject": "Как превратить искусство в массовый продукт",
+            "Dates": [
+              "01.09.1963"
+            ],
+            "EventLocations": [
+              {
+                "DisplayName": "231 East 47th Street"
+              }
+            ],
+            "ContingentUnitNames": [
+              {
+                "Item1": "Группа",
+                "Item2": "101A"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "DayString": "Вторник",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      },
+      {
+        "DayString": "Среда",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      },
+      {
+        "DayString": "Четверг",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      },
+      {
+        "DayString": "Пятница",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      },
+      {
+        "DayString": "Суббота",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      }
+    ]
+  }
+]

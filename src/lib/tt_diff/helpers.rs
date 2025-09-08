@@ -6,7 +6,8 @@ use log::{debug, info};
 use reqwest::Client;
 
 use crate::tt_diff::models::{
-    educator_model::DayStudyEvent, educator_model::EducatorEvents, Args, Config, User,
+    educator_model::{DayStudyEvent, EducatorDay, EducatorEvents},
+    Args, Config, User,
 };
 
 pub fn log_all_users(users: &[User]) -> () {
@@ -80,86 +81,110 @@ fn format_event_as_string(event: &DayStudyEvent) -> String {
     )
 }
 
-/* take old and new events hashmaps, for every educator for every day form string diffs, if any */
+fn add_day_to_diff(cur_educator_diff: &mut Vec<String>, educator_day: &EducatorDay) {
+    if educator_day.day_study_events_count != 0 {
+        cur_educator_diff.push(format!("<em style=\"color:green;\">Новый день:</em>"));
+        cur_educator_diff.push(format!(
+            "<b><font size=\"5\">{}:</font></b><br>{}",
+            educator_day.day_string,
+            educator_day
+                .day_study_events
+                .iter()
+                .map(format_event_as_string)
+                .collect::<Vec<_>>()
+                .join("<br>")
+        ));
+    }
+}
+
+fn diff_educator_day(old_day: &EducatorDay, new_day: &EducatorDay) -> (Vec<String>, Vec<String>) {
+    let old_events = &old_day.day_study_events;
+    let new_events = &new_day.day_study_events;
+
+    let added_events = new_events.difference(old_events);
+    let removed_events = old_events.difference(new_events);
+
+    let mut removed_acc = Vec::new();
+    for event in removed_events {
+        removed_acc.push(format_event_as_string(event));
+    }
+    if removed_acc.len() > 0 {
+        removed_acc.insert(
+            0,
+            "<em style=\"color:red;\">Удалённые события:</em>".to_string(),
+        )
+    }
+    let mut added_acc = Vec::new();
+    for event in added_events {
+        added_acc.push(format_event_as_string(event));
+    }
+    if added_acc.len() > 0 {
+        added_acc.insert(
+            0,
+            "<em style=\"color:green;\">Новые события:</em>".to_string(),
+        )
+    }
+    return (removed_acc, added_acc);
+}
+
+fn add_tracked_educator_to_diff<'a>(
+    educator_old_events: &'a EducatorEvents,
+    educator_new_events: &'a EducatorEvents,
+) -> Vec<String> {
+    let mut cur_educator_diff = Vec::new();
+
+    for day in 0..6 {
+        let old_day = &educator_old_events.educator_events_days[day];
+        let new_day = &educator_new_events.educator_events_days[day];
+
+        match old_day.day_study_events_count {
+            0 => {
+                if !(new_day.day_study_events_count == 0) {
+                    add_day_to_diff(&mut cur_educator_diff, new_day)
+                }
+            }
+            _ => {
+                let (removed, added) = diff_educator_day(old_day, new_day);
+                let mut combined = added.clone();
+                combined.extend(removed);
+                if combined.len() > 0 {
+                    cur_educator_diff.push(format!(
+                        "<b><font size=\"5\">{}:</font></b>",
+                        new_day.day_string,
+                    ));
+                    cur_educator_diff.extend(combined);
+                }
+            }
+        }
+    }
+    cur_educator_diff
+}
+
+fn add_untracked_educator_to_diff<'a>(educator_events: &'a EducatorEvents) -> Vec<String> {
+    let mut cur_educator_diff = Vec::new();
+
+    for new_day in &educator_events.educator_events_days {
+        add_day_to_diff(&mut cur_educator_diff, new_day);
+    }
+
+    cur_educator_diff
+}
+
 pub fn generate_diff_messages<'a>(
     educators_old: &'a HashMap<u32, EducatorEvents>,
     educators_new: &'a HashMap<u32, EducatorEvents>,
 ) -> HashMap<u32, (&'a EducatorEvents, String)> {
     let mut educators_new_w_messages = HashMap::new();
 
-    /* for every new found educator look for old events, if there are none, insert all new days in diff */
+    /* for every found educator look for their old events,
+    if there are none, insert all their events into the diff */
     for (&educator_id, new_events) in educators_new {
-        if let Some(old_events) = educators_old.get(&educator_id) {
-            let mut cur_educator_diff = Vec::new();
-
-            /* for every new found day of current educator look for that day in old schedule via name equality,
-            if there are none, insert the whole day in diff */
-            for new_day in &new_events.educator_events_days {
-                if let Some(old_day) = old_events
-                    .educator_events_days
-                    .iter()
-                    .find(|old_day| old_day.day_string == new_day.day_string)
-                {
-                    let mut cur_day_diff = Vec::new();
-
-                    /* for every new event of the day, if the same event does not exist in old schedule, insert that event in current day diff */
-                    for new_event in &new_day.day_study_events {
-                        if !old_day
-                            .day_study_events
-                            .iter()
-                            .any(|old_ev| new_event == old_ev)
-                        {
-                            cur_day_diff.push(format_event_as_string(new_event));
-                        }
-                    }
-
-                    /* if acc for current day is not empty, push it into acc for week */
-                    if !cur_day_diff.is_empty() {
-                        cur_educator_diff.push(format!(
-                            "<b><font size=\"5\">{}:</font></b><br>{}",
-                            new_day.day_string,
-                            cur_day_diff.join("<br>")
-                        ));
-                    }
-                } else {
-                    cur_educator_diff.push(format!(
-                        "<b><font size=\"5\">{}:<font size=\"10\"></b><br>{}",
-                        new_day.day_string,
-                        new_day
-                            .day_study_events
-                            .iter()
-                            .map(format_event_as_string)
-                            .collect::<Vec<_>>()
-                            .join("<br>")
-                    ));
-                }
-            }
-
-            /* if acc collecting all changes in a week is not empty, insert educator and their diff into map */
-            if !cur_educator_diff.is_empty() {
-                educators_new_w_messages.insert(
-                    educator_id,
-                    (new_events, format!("{}", cur_educator_diff.join("<br>"))),
-                );
-            }
-        } else {
-            let mut cur_educator_diff = Vec::new();
-            for new_day in &new_events.educator_events_days {
-                cur_educator_diff.push(format!(
-                    "<b><font size=\"5\">{}:<font size=\"10\"></b><br>{}",
-                    new_day.day_string,
-                    new_day
-                        .day_study_events
-                        .iter()
-                        .map(format_event_as_string)
-                        .collect::<Vec<_>>()
-                        .join("<br>")
-                ));
-            }
-            educators_new_w_messages.insert(
-                educator_id,
-                (new_events, format!("{}", cur_educator_diff.join("<br>"))),
-            );
+        let educator_diff = match educators_old.get(&educator_id) {
+            Some(old_events) => add_tracked_educator_to_diff(old_events, new_events),
+            None => add_untracked_educator_to_diff(new_events),
+        };
+        if educator_diff.len() > 0 {
+            educators_new_w_messages.insert(educator_id, (new_events, educator_diff.join("<br>")));
         }
     }
 

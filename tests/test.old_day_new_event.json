@@ -1,60 +1,141 @@
 [
-    {
-      "EducatorLongDisplayText": "Энди Уорхол",
-      "EducatorMasterId": 1928,
-      "EducatorEventsDays": [
-        {
-          "DayString": "Понедельник",
-          "DayStudyEventsCount": 1,
-          "DayStudyEvents": [
-            {
-              "TimeIntervalString": "08:30-10:00",
-              "Subject": "Как превратить искусство в массовый продукт",
-              "Dates": ["01.09.1963"],
-              "EventLocations": [
-                { "DisplayName": "231 East 47th Street" }
-              ],
-              "ContingentUnitNames": [
-                { "Item1": "Группа", "Item2": "101A" }
-              ]
-            },
-            {
-                "TimeIntervalString": "13:00-14:30",
-                "Subject": "Истоки поп-арта",
-                "Dates": ["02.09.1968", "10.09.1968"],
-                "EventLocations": [
-                  { "DisplayName": "33 Union Square West" }
-                ],
-                "ContingentUnitNames": [
-                  { "Item1": "Группа", "Item2": "103C" }
-                ]
+  {
+    "EducatorLongDisplayText": "Энди Уорхол",
+    "EducatorMasterId": 1928,
+    "EducatorEventsDays": [
+      {
+        "DayString": "Понедельник",
+        "DayStudyEventsCount": 1,
+        "DayStudyEvents": [
+          {
+            "TimeIntervalString": "08:30-10:00",
+            "Start": "08:30",
+            "End": "10:00",
+            "Subject": "Как превратить искусство в массовый продукт",
+            "Dates": [
+              "01.09.1963"
+            ],
+            "EventLocations": [
+              {
+                "DisplayName": "231 East 47th Street"
               }
-          ]
-        }
-      ]
-    },
-    {
-      "EducatorLongDisplayText": "Казимир Малевич",
-      "EducatorMasterId": 1879,
-      "EducatorEventsDays": [
-        {
-          "DayString": "Вторник",
-          "DayStudyEventsCount": 1,
-          "DayStudyEvents": [
-            {
-              "TimeIntervalString": "09:00-10:30",
-              "Subject": "От кубизма к супрематизму",
-              "Dates": ["29.12.1915"],
-              "EventLocations": [
-                { "DisplayName": "Дворцовая площадь, д. 6/8" }
-              ],
-              "ContingentUnitNames": [
-                { "Item1": "Группа", "Item2": "201A" },
-                { "Item1": "Группа", "Item2": "201B" }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
+            ],
+            "ContingentUnitNames": [
+              {
+                "Item1": "Группа",
+                "Item2": "101A"
+              }
+            ]
+          },
+          {
+            "TimeIntervalString": "13:00-14:30",
+            "Start": "13:00",
+            "End": "14:30",
+            "Subject": "Истоки поп-арта",
+            "Dates": [
+              "02.09.1968",
+              "10.09.1968"
+            ],
+            "EventLocations": [
+              {
+                "DisplayName": "33 Union Square West"
+              }
+            ],
+            "ContingentUnitNames": [
+              {
+                "Item1": "Группа",
+                "Item2": "103C"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "DayString": "Вторник",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      },
+      {
+        "DayString": "Среда",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      },
+      {
+        "DayString": "Четверг",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      },
+      {
+        "DayString": "Пятница",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      },
+      {
+        "DayString": "Суббота",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      }
+    ]
+  },
+  {
+    "EducatorLongDisplayText": "Казимир Малевич",
+    "EducatorMasterId": 1879,
+    "EducatorEventsDays": [
+      {
+        "DayString": "Понедельник",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      },
+      {
+        "DayString": "Вторник",
+        "DayStudyEventsCount": 1,
+        "DayStudyEvents": [
+          {
+            "TimeIntervalString": "09:00-10:30",
+            "Start": "09:00",
+            "End": "10:30",
+            "Subject": "От кубизма к супрематизму",
+            "Dates": [
+              "29.12.1915"
+            ],
+            "EventLocations": [
+              {
+                "DisplayName": "Дворцовая площадь, д. 6/8"
+              }
+            ],
+            "ContingentUnitNames": [
+              {
+                "Item1": "Группа",
+                "Item2": "201A"
+              },
+              {
+                "Item1": "Группа",
+                "Item2": "201B"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "DayString": "Среда",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      },
+      {
+        "DayString": "Четверг",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      },
+      {
+        "DayString": "Пятница",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      },
+      {
+        "DayString": "Суббота",
+        "DayStudyEventsCount": 0,
+        "DayStudyEvents": []
+      }
+    ]
+  }
+]
