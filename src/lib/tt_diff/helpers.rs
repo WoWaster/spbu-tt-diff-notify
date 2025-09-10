@@ -5,7 +5,7 @@ use lettre::{message::header::ContentType, Message};
 use log::{debug, info};
 use reqwest::Client;
 
-use crate::tt_diff::models::{
+use super::models::{
     educator_model::{DayStudyEvent, EducatorDay, EducatorEvents},
     Args, Config, User,
 };
