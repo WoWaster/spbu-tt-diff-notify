@@ -135,14 +135,13 @@ async fn test_main() {
 
     let mut test_expected = HashMap::new();
 
-    let sender_address = "diff_notification@mail.ru".parse::<Address>().unwrap();
+    let sender_address = config.email_sender_username.parse::<Address>().unwrap();
     let recipients_addresses = vec!["campbellsoupthebest@gmail.com".parse::<Address>().unwrap()];
 
     let warhol_envelope = Envelope::new(Some(sender_address), recipients_addresses).unwrap();
 
     let warhol_email = Message::builder()
-    .from("Оповещения об изменениях расписания <diff_notification@mail.ru>".parse().unwrap())
-    //.reply_to("Yuin <yuin@domain.tld>".parse().unwrap())
+    .from(format!("{} <{}>", config.email_sender_fullname, config.email_sender_username).parse().unwrap())
     .to("Энди Уорхол <campbellsoupthebest@gmail.com>".parse().unwrap())
     .subject("Изменилось расписание преподавателя!")
     .header(ContentType::TEXT_HTML)
