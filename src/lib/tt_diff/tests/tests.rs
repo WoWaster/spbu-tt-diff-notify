@@ -1,7 +1,4 @@
-use std::{
-    collections::BTreeSet,
-    path::PathBuf,
-};
+use std::{collections::BTreeSet, path::PathBuf};
 
 use crate::tt_diff::models::educator_model::{ContingentUnitName, EducatorDay, EventLocation};
 
