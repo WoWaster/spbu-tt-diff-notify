@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeSet, HashSet},
+    collections::BTreeSet,
     path::PathBuf,
 };
 
@@ -51,7 +51,7 @@ fn get_users_valid_json() {
     };
 
     let users = get_users(&args).unwrap();
-    let watch_ed_ref = HashSet::from([1928, 1879]);
+    let watch_ed_ref = BTreeSet::from([1928, 1879]);
     assert_eq!(users.len(), 1);
     assert_eq!(users[0].name, "Энди Уорхол");
     assert_eq!(users[0].watch_educators, watch_ed_ref);

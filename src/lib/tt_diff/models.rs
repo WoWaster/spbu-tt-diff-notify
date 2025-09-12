@@ -1,4 +1,4 @@
-use std::{collections::HashSet, path::PathBuf};
+use std::{collections::BTreeSet, path::PathBuf};
 
 use clap::{command, Parser};
 use serde::{Deserialize, Serialize};
@@ -9,8 +9,8 @@ pub mod educator_model;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct User {
     pub name: String,
-    pub watch_educators: HashSet<u32>,
-    pub watch_groups: HashSet<u32>,
+    pub watch_educators: BTreeSet<u32>,
+    pub watch_groups: BTreeSet<u32>,
     pub email: String,
 }
 
