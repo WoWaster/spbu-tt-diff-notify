@@ -159,6 +159,6 @@ async fn test_main() {
         transport: test_transport,
         expected: test_expected,
     };
-    // TODO: something about BTreeSet. it places educators in arbitrary order => tests fail half the time
+
     let _ = run(test_getter, test_sender, &args, config).await;
 }
