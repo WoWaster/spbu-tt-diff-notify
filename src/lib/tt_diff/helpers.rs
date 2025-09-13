@@ -1,11 +1,11 @@
-use std::{collections::HashMap, error::Error, fs::File, io::BufReader};
+use std::{collections::BTreeMap, error::Error, fs::File, io::BufReader};
 
 use itertools::Itertools;
 use lettre::{message::header::ContentType, Message};
 use log::{debug, info};
 use reqwest::Client;
 
-use crate::tt_diff::models::{
+use super::models::{
     educator_model::{DayStudyEvent, EducatorDay, EducatorEvents},
     Args, Config, User,
 };
@@ -30,7 +30,7 @@ pub fn get_users(args: &Args) -> Result<Vec<User>, Box<dyn Error>> {
     Ok(users)
 }
 
-pub fn get_previous_events(args: &Args) -> Result<HashMap<u32, EducatorEvents>, Box<dyn Error>> {
+pub fn get_previous_events(args: &Args) -> Result<BTreeMap<u32, EducatorEvents>, Box<dyn Error>> {
     info!(
         "Reading previous events from {}",
         std::path::absolute(&args.previous_events_json_path)?.display()
@@ -41,10 +41,10 @@ pub fn get_previous_events(args: &Args) -> Result<HashMap<u32, EducatorEvents>, 
         let events_hm = events
             .into_iter()
             .map(|educator| (educator.educator_master_id.to_owned(), educator))
-            .collect::<HashMap<_, _>>();
+            .collect::<BTreeMap<_, _>>();
         Ok(events_hm)
     } else {
-        Ok(HashMap::new())
+        Ok(BTreeMap::new())
     }
 }
 
@@ -171,10 +171,10 @@ fn add_untracked_educator_to_diff<'a>(educator_events: &'a EducatorEvents) -> Ve
 }
 
 pub fn generate_diff_messages<'a>(
-    educators_old: &'a HashMap<u32, EducatorEvents>,
-    educators_new: &'a HashMap<u32, EducatorEvents>,
-) -> HashMap<u32, (&'a EducatorEvents, String)> {
-    let mut educators_new_w_messages = HashMap::new();
+    educators_old: &'a BTreeMap<u32, EducatorEvents>,
+    educators_new: &'a BTreeMap<u32, EducatorEvents>,
+) -> BTreeMap<u32, (&'a EducatorEvents, String)> {
+    let mut educators_new_w_messages = BTreeMap::new();
 
     /* for every found educator look for their old events,
     if there are none, insert all their events into the diff */
@@ -192,7 +192,7 @@ pub fn generate_diff_messages<'a>(
 }
 
 pub fn collect_all_tracked_diffs(
-    educators_changed: &HashMap<u32, (&EducatorEvents, String)>,
+    educators_changed: &BTreeMap<u32, (&EducatorEvents, String)>,
     user: &User,
 ) -> String {
     let mut acc: Vec<String> = Vec::new();
@@ -229,8 +229,16 @@ pub fn generate_email(config: &Config, user: &User, diff: &str) -> Result<Messag
 
 pub fn write_previous_events(
     args: &Args,
-    educator_events_new: HashMap<u32, EducatorEvents>,
+    educator_events_new: BTreeMap<u32, EducatorEvents>,
 ) -> Result<(), Box<dyn Error>> {
+    let is_test = &args
+        .previous_events_json_path
+        .to_str()
+        .unwrap()
+        .starts_with("tests/test.");
+    if *is_test {
+        return Ok(());
+    }
     info!(
         "Writing {} events to a {}",
         educator_events_new.len(),
