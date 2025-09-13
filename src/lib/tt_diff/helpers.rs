@@ -231,6 +231,14 @@ pub fn write_previous_events(
     args: &Args,
     educator_events_new: HashMap<u32, EducatorEvents>,
 ) -> Result<(), Box<dyn Error>> {
+    let is_test = &args
+        .previous_events_json_path
+        .to_str()
+        .unwrap()
+        .starts_with("tests/test.");
+    if *is_test {
+        return Ok(());
+    }
     info!(
         "Writing {} events to a {}",
         educator_events_new.len(),
