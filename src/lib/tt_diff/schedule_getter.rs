@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 use futures::future;
 use log::info;
@@ -12,16 +12,16 @@ use super::{
 // probably do smth about this warning later
 #[allow(async_fn_in_trait)]
 pub trait ScheduleGetter {
-    async fn get_schedule(&self, users: &Vec<User>) -> HashMap<u32, EducatorEvents>;
+    async fn get_schedule(&self, users: &Vec<User>) -> BTreeMap<u32, EducatorEvents>;
 }
 
 impl ScheduleGetter for Client {
-    async fn get_schedule(&self, users: &Vec<User>) -> HashMap<u32, EducatorEvents> {
+    async fn get_schedule(&self, users: &Vec<User>) -> BTreeMap<u32, EducatorEvents> {
         let watched_educators = users
             .iter()
             .flat_map(|user| &user.watch_educators)
             .cloned()
-            .collect::<HashSet<_>>();
+            .collect::<BTreeSet<_>>();
         /* Collect new info from timetable about all watched educators */
         let educator_events_new = future::join_all(
             watched_educators
@@ -30,7 +30,7 @@ impl ScheduleGetter for Client {
         )
         .await
         .into_iter()
-        .collect::<Result<HashMap<_, _>, _>>()
+        .collect::<Result<BTreeMap<_, _>, _>>()
         .unwrap();
         info!("Collected {} educator events", educator_events_new.len());
         return educator_events_new;

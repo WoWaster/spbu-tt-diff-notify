@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use lettre::{SmtpTransport, Transport};
 use log::info;
@@ -15,7 +15,7 @@ pub trait LetterSender {
         self,
         users: Vec<User>,
         config: Config,
-        ed_changed: HashMap<u32, (&EducatorEvents, String)>,
+        ed_changed: BTreeMap<u32, (&EducatorEvents, String)>,
     );
 }
 
@@ -24,7 +24,7 @@ impl LetterSender for SmtpTransport {
         self,
         users: Vec<User>,
         config: Config,
-        ed_changed: HashMap<u32, (&EducatorEvents, String)>,
+        ed_changed: BTreeMap<u32, (&EducatorEvents, String)>,
     ) {
         for user in users.iter() {
             let diff = collect_all_tracked_diffs(&ed_changed, user);

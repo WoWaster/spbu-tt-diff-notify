@@ -66,7 +66,7 @@ fn get_prev_events_correct_json() {
 
     let prev_ev = get_previous_events(&args).unwrap();
 
-    let mut prev_ev_ref = HashMap::new();
+    let mut prev_ev_ref = BTreeMap::new();
 
     let mut warhol_educator_events_days = generate_empty_educator_events_days();
     warhol_educator_events_days[0] = EducatorDay {
@@ -136,7 +136,7 @@ fn get_prev_events_non_existent_json() {
         previous_events_json_path: PathBuf::from("non_existent.json"),
     };
     let test_map = get_previous_events(&args).unwrap();
-    let ref_map = HashMap::new();
+    let ref_map = BTreeMap::new();
     assert_eq!(test_map, ref_map)
 }
 

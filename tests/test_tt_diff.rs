@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use figment::providers::Env;
@@ -27,7 +27,7 @@ pub struct TestGetter {
 }
 
 impl ScheduleGetter for TestGetter {
-    async fn get_schedule(&self, _users: &Vec<User>) -> HashMap<u32, EducatorEvents> {
+    async fn get_schedule(&self, _users: &Vec<User>) -> BTreeMap<u32, EducatorEvents> {
         let mock_site = Args {
             users_json_path: PathBuf::from("_"),
             config_json_path: PathBuf::from("_"),
@@ -42,7 +42,7 @@ pub struct TestSender {
     pub transport: StubTransport,
     // Hashmap uses user mail address as unique identifier, (Envelope, String, Message) = (letter headers, contents of letter, Message to assert bodies equal in readable format)
     // Option is for cases when some educators stay the same, ergo should not have any letter at all
-    pub expected: HashMap<String, Option<(Envelope, String, Message)>>,
+    pub expected: BTreeMap<String, Option<(Envelope, String, Message)>>,
 }
 
 // ugly, but does the trick. otherwise Message would be in serialised format, totally unreadable
@@ -64,7 +64,7 @@ impl LetterSender for TestSender {
         self,
         users: Vec<User>,
         config: Config,
-        ed_changed: HashMap<u32, (&EducatorEvents, String)>,
+        ed_changed: BTreeMap<u32, (&EducatorEvents, String)>,
     ) {
         for user in users.iter() {
             let user_id = &user.email;
@@ -133,7 +133,7 @@ async fn test_main() {
 
     let test_transport = StubTransport::new_ok();
 
-    let mut test_expected = HashMap::new();
+    let mut test_expected = BTreeMap::new();
 
     let sender_address = config.email_sender_username.parse::<Address>().unwrap();
     let recipients_addresses = vec!["campbellsoupthebest@gmail.com".parse::<Address>().unwrap()];
