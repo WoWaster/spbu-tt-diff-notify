@@ -33,7 +33,7 @@ Contains email sender configuration parameters.
     "email_relay": "mail.example.com", <- SMTP server address
     "email_sender_username": "sender@example.com", <- email address from which the letters will be sent
     "email_sender_fullname": "Notifications about schedule changes", <- sender display name
-    "email_sender_password": "password"
+    "email_sender_password": "password" <- sender password
 }
 ```
 
