@@ -11,7 +11,7 @@ First thing you need to do is define files `users.json` and `config.json`, which
 
 Defines the list of users who will receive notifications, and the list of watched educators for each one of them.
 
-```json
+```bash
 [
     {
         "name": "User's Name", <- what the user prefers to be called
@@ -28,7 +28,7 @@ Defines the list of users who will receive notifications, and the list of watche
 
 Contains email sender configuration parameters.
 
-```json
+```bash
 {
     "email_relay": "mail.example.com", <- SMTP server address
     "email_sender_username": "sender@example.com", <- email address from which the letters will be sent
