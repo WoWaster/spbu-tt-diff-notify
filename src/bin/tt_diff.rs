@@ -1,4 +1,3 @@
-use lib::tt_diff::helpers;
 use lib::tt_diff::models;
 use lib::tt_diff::run_tool::run;
 
@@ -7,7 +6,6 @@ use figment::{
     providers::{Env, Format, Json},
     Figment,
 };
-use helpers::write_previous_events;
 use lettre::{
     transport::smtp::authentication::{Credentials, Mechanism},
     SmtpTransport,
@@ -43,6 +41,5 @@ async fn main() {
         ))
         .authentication(vec![Mechanism::Plain])
         .build();
-    let new_events = run(http_client, sender, &args, config).await;
-    write_previous_events(&args, new_events).unwrap();
+    run(http_client, sender, &args, config).await;
 }
