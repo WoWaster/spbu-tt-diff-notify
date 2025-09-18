@@ -33,7 +33,7 @@ Contains email sender configuration parameters.
     "email_relay": "mail.example.com", <- SMTP server address
     "email_sender_username": "sender@example.com", <- email address from which the letters will be sent
     "email_sender_fullname": "Notifications about schedule changes", <- sender display name
-    "email_sender_password": "password" <- sender password
+    "email_sender_password": "password" <- sender email password
 }
 ```
 
@@ -61,11 +61,11 @@ Run it with Cargo:
   --previous-events-json-path path/to/your/previous_events.json
 ```
 
-You might also want to set up automatic launch at certain intervals for greater convenience.
+You might also want to set up automatic launch at certain time intervals for greater convenience.
 
 ## License
 
-This project is distributed under the MIT License (see LICENSE for more info)
+This project is distributed under the MIT License (check LICENSE for more info)
 
 ## Developers
 * [Nikolai Ponomarev](https://github.com/WoWaster)
