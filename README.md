@@ -9,7 +9,7 @@ First thing you need to do is define files `users.json` and `config.json`, which
 
 ### `users.json`
 
-Defines the list of users who will receive notifications, and the list of watched educators for each one of them.
+Provides the info about users who will receive notifications and the list of watched educators for each one of them.
 
 ```bash
 [
