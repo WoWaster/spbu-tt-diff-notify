@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeSet, HashSet},
-    path::PathBuf,
-};
+use std::{collections::BTreeSet, path::PathBuf};
 
 use crate::tt_diff::models::educator_model::{ContingentUnitName, EducatorDay, EventLocation};
 
@@ -51,7 +48,7 @@ fn get_users_valid_json() {
     };
 
     let users = get_users(&args).unwrap();
-    let watch_ed_ref = HashSet::from([1928, 1879]);
+    let watch_ed_ref = BTreeSet::from([1928, 1879]);
     assert_eq!(users.len(), 1);
     assert_eq!(users[0].name, "Энди Уорхол");
     assert_eq!(users[0].watch_educators, watch_ed_ref);
@@ -69,7 +66,7 @@ fn get_prev_events_correct_json() {
 
     let prev_ev = get_previous_events(&args).unwrap();
 
-    let mut prev_ev_ref = HashMap::new();
+    let mut prev_ev_ref = BTreeMap::new();
 
     let mut warhol_educator_events_days = generate_empty_educator_events_days();
     warhol_educator_events_days[0] = EducatorDay {
@@ -80,7 +77,7 @@ fn get_prev_events_correct_json() {
             start: "08:30".to_string(),
             end: "10:00".to_string(),
             subject: "Как превратить искусство в массовый продукт".to_string(),
-            dates: BTreeSet::from(["01.09.1963".to_string()]),
+            dates: vec!["01.09.1963".to_string()],
             event_locations: BTreeSet::from([EventLocation {
                 display_name: "231 East 47th Street".to_string(),
             }]),
@@ -106,7 +103,7 @@ fn get_prev_events_correct_json() {
             start: "09:00".to_string(),
             end: "10:30".to_string(),
             subject: "От кубизма к супрематизму".to_string(),
-            dates: BTreeSet::from(["29.12.1915".to_string()]),
+            dates: vec!["29.12.1915".to_string()],
             event_locations: BTreeSet::from([EventLocation {
                 display_name: "Дворцовая площадь, д. 6/8".to_string(),
             }]),
@@ -139,7 +136,7 @@ fn get_prev_events_non_existent_json() {
         previous_events_json_path: PathBuf::from("non_existent.json"),
     };
     let test_map = get_previous_events(&args).unwrap();
-    let ref_map = HashMap::new();
+    let ref_map = BTreeMap::new();
     assert_eq!(test_map, ref_map)
 }
 
@@ -150,7 +147,7 @@ fn format_event_as_string1() {
         start: "09:30".to_string(),
         end: "11:00".to_string(),
         subject: "Матлогика".to_string(),
-        dates: BTreeSet::from(["01.09.2025".to_string()]),
+        dates: vec!["01.09.2025".to_string()],
         event_locations: BTreeSet::from([EventLocation {
             display_name: "Университетский пр. 28Д".to_string(),
         }]),

@@ -23,7 +23,7 @@ pub struct DayStudyEvent {
     pub end: String,
     pub subject: String,
     pub time_interval_string: String,
-    pub dates: BTreeSet<String>,
+    pub dates: Vec<String>,
     pub event_locations: BTreeSet<EventLocation>,
     pub contingent_unit_names: BTreeSet<ContingentUnitName>,
 }
