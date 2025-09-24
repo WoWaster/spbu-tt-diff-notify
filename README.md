@@ -1,59 +1,58 @@
-# 🛸Geraltt🛸: schedule change tracking tool for SPbU TimeTable
+# 🛸Geraltt🛸: инструмент отслеживания изменений в расписании для SPbU TimeTable
 
-**Geraltt** is a tool for tracking changes in SPbU educators’ schedules via emails.  
-It collects information about educators from the SPbU TimeTable website based on educators IDs, formats them into letter and sends it to all users, who are subscribed to said educators changes.
+**Geraltt** -- это инструмент для уведомления преподавателей об изменениях в их расписании при помощи электронных писем, собирающий информацию об актуальном расписании с университетского портала TimeTable.
 
-## How to get started
+## Предварительная настройка
 
-First thing you need to do is define files `users.json` and `config.json`, which are necessary for flexible adjusment of the tool. They must satisfy the following patterns:
+Перед использованием инструмента необходимо определить файлы `users.json` и `config.json`, необходимые для гибкой настройки инструмента. Они должны удовлетворять следующему формату:
 
 ### `users.json`
 
-Provides the info about users who will receive notifications and the list of watched educators for each one of them.
+Предоставляет информацию о пользователях, которые будут получать уведомления, и список отслеживаемых преподавателей каждого из них.
 
 ```bash
 [
     {
-        "name": "User's Name", <- what the user prefers to be called
+        "name": "User's Name", <- имя пользователя
         "watch_educators": [
-            5770, 1928, 1879 <- IDs of watched educators
+            5770, 1928, 1879 <- идентификаторы отслеживаемых преподавателей
         ],
-        "watch_groups": [], <- leave this field empty
-        "email": "example@gmail.com" <- user email address
+        "watch_groups": []
+        "email": "example@gmail.com" <- адрес электронной почты пользователя
     }
 ]
 ```
 
 ### `config.json`
 
-Contains email sender configuration parameters.
+Содержит конфигурационные параметры отправителя писем.
 
 ```bash
 {
-    "email_relay": "mail.example.com", <- SMTP server address
-    "email_sender_username": "sender@example.com", <- email address from which the letters will be sent
-    "email_sender_fullname": "Notifications about schedule changes", <- sender display name
-    "email_sender_password": "password" <- sender email password
+    "email_relay": "mail.example.com", <- адрес SMTP сервера
+    "email_sender_username": "sender@example.com", <- адрес электронной почты, с которого будут отправляться уведомления об изменениях
+    "email_sender_fullname": "Notifications about schedule changes", <- имя отправителя писем
+    "email_sender_password": "password" <- пароль ящика электронной почты отправителя писем
 }
 ```
 
 ### `previous_events.json`
 
-Contains the information about schedule state at the time of the last Geraltt's launch. Shouldn't be made manually, you will only need to specify the path.
+Содержит информацию о состоянии расписания на момент предыдущего запуска Geraltt. Его не нужно создавать, только указать путь, по которому вы бы хотели, чтобы он находился.
 
-### Setup
+### Запуск
 
-Clone this repo:
+Склонируйте этот репозиторий:
 ```bash
   git clone git@github.com:WoWaster/spbu-tt-diff-notify.git
 ```
 
-Open the project:
+Откройте проект:
 ```bash
   cd spbu-tt-diff-notify
 ```
 
-Run it with Cargo:
+Запустите его при помощи Cargo:
 ```bash
   cargo run --bin tt_diff -- \
   --users-json-path path/to/your/users.json \
@@ -61,12 +60,12 @@ Run it with Cargo:
   --previous-events-json-path path/to/your/previous_events.json
 ```
 
-You might also want to set up automatic launch at certain time intervals for greater convenience.
+Для удобства лучше сразу настроить периодический запуск инструмента через определенные промежутки времени (например, раз в час), чтобы своевременно узнавать о произошедших изменениях.
 
-## License
+## Лицензия
 
-This project is distributed under the MIT License (check LICENSE for more info)
+Проект распространяется под лицензией MIT (см. LICENSE).
 
-## Developers
-* [Nikolai Ponomarev](https://github.com/WoWaster)
-* [Ksenia Kotelnikova](https://github.com/p1onerka)
+## Разработчики
+* [Николай Пономарёв](https://github.com/WoWaster)
+* [Ксения Котельникова](https://github.com/p1onerka)
