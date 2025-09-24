@@ -113,12 +113,12 @@ impl LetterSender for TestSender {
     }
 }
 
-#[tokio::test]
-async fn test_main() {
+//#[tokio::test]
+async fn test_main(old_ev_path: &str, new_ev_path: &str, diff_exp: &str) {
     let args = Args {
         users_json_path: PathBuf::from("tests/test.users.json"),
         config_json_path: PathBuf::from("example.config.json"),
-        previous_events_json_path: PathBuf::from("tests/test.less_events.json"),
+        previous_events_json_path: PathBuf::from(old_ev_path),
     };
     let config: Config = Figment::new()
         .merge(Json::file(&args.config_json_path))
@@ -128,7 +128,7 @@ async fn test_main() {
 
     // set up test getter from JSON
     let test_getter = TestGetter {
-        new_schedule_path: "tests/test.many_events.json".to_string(),
+        new_schedule_path: new_ev_path.to_string(),
     };
 
     let test_transport = StubTransport::new_ok();
@@ -145,7 +145,7 @@ async fn test_main() {
     .to("Энди Уорхол <campbellsoupthebest@gmail.com>".parse().unwrap())
     .subject("Изменилось расписание преподавателя!")
     .header(ContentType::TEXT_HTML)
-    .body(String::from("Уважаемый(ая) Энди Уорхол!<br><br> В расписании преподавателя <b>Казимир Малевич</b> произошли изменения:<br><br><b><font size=\"5\">Вторник:</font></b><br><em style=\"color:green;\">Новые события:</em><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 22.12.1915, 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br><br>    <b>Предмет:</b> Декларация прав художника<br>    <b>Время:</b> 11:00-12:30<br>    <b>Даты:</b> 15.08.1918, 22.08.1918<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 202A<br><br><em style=\"color:red;\">Удалённые события:</em><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br><br><br> <br>В расписании преподавателя <b>Энди Уорхол</b> произошли изменения:<br><br><b><font size=\"5\">Понедельник:</font></b><br><em style=\"color:green;\">Новые события:</em><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963, 08.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A, Группа 101B<br><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 10:15-11:45<br>    <b>Даты:</b> 01.09.1968, 08.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 102B<br><br><em style=\"color:red;\">Удалённые события:</em><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A<br><br><em style=\"color:green;\">Новый день:</em><br><b><font size=\"5\">Среда:</font></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br><br> <br> Данное письмо было сгенерировано автоматически, направление ответа не подразумевается.")).unwrap();
+    .body(String::from(diff_exp)).unwrap();
 
     let warhol_contents = String::from_utf8(warhol_email.formatted()).unwrap();
 
@@ -161,4 +161,9 @@ async fn test_main() {
     };
 
     let _ = run(test_getter, test_sender, &args, config).await;
+}
+
+#[tokio::test]
+async fn test_less_to_many_events() {
+    test_main("tests/test.less_events.json", "tests/test.many_events.json", "Уважаемый(ая) Энди Уорхол!<br><br> В расписании преподавателя <b>Казимир Малевич</b> произошли изменения:<br><br><b><font size=\"5\">Вторник:</font></b><br><em style=\"color:green;\">Новые события:</em><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 22.12.1915, 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br><br>    <b>Предмет:</b> Декларация прав художника<br>    <b>Время:</b> 11:00-12:30<br>    <b>Даты:</b> 15.08.1918, 22.08.1918<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 202A<br><br><em style=\"color:red;\">Удалённые события:</em><br>    <b>Предмет:</b> От кубизма к супрематизму<br>    <b>Время:</b> 09:00-10:30<br>    <b>Даты:</b> 29.12.1915<br>    <b>Места:</b> Дворцовая площадь, д. 6/8<br>    <b>Направления:</b> Группа 201A, Группа 201B<br><br><br> <br>В расписании преподавателя <b>Энди Уорхол</b> произошли изменения:<br><br><b><font size=\"5\">Понедельник:</font></b><br><em style=\"color:green;\">Новые события:</em><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963, 08.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A, Группа 101B<br><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 10:15-11:45<br>    <b>Даты:</b> 01.09.1968, 08.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 102B<br><br><em style=\"color:red;\">Удалённые события:</em><br>    <b>Предмет:</b> Как превратить искусство в массовый продукт<br>    <b>Время:</b> 08:30-10:00<br>    <b>Даты:</b> 01.09.1963<br>    <b>Места:</b> 231 East 47th Street<br>    <b>Направления:</b> Группа 101A<br><br><em style=\"color:green;\">Новый день:</em><br><b><font size=\"5\">Среда:</font></b><br>    <b>Предмет:</b> Истоки поп-арта<br>    <b>Время:</b> 13:00-14:30<br>    <b>Даты:</b> 02.09.1968, 10.09.1968<br>    <b>Места:</b> 33 Union Square West<br>    <b>Направления:</b> Группа 103C<br><br> <br> Данное письмо было сгенерировано автоматически, направление ответа не подразумевается.").await;
 }
