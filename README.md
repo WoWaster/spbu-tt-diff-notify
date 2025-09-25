@@ -67,5 +67,5 @@
 Проект распространяется под лицензией MIT (см. LICENSE).
 
 ## Разработчики
-* [Николай Пономарёв](https://github.com/WoWaster)
+* [Николай Пономарев](https://github.com/WoWaster)
 * [Ксения Котельникова](https://github.com/p1onerka)
