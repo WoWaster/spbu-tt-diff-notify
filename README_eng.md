@@ -45,7 +45,7 @@ Contains the information about schedule state at the time of the last Geraltt's 
 
 Clone this repo:
 ```bash
-  git clone git@github.com:WoWaster/spbu-tt-diff-notify.git
+  git clone git@github.com:WoWaster/Geraltt.git
 ```
 
 Open the project:

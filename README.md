@@ -44,7 +44,7 @@
 
 Склонируйте этот репозиторий:
 ```bash
-  git clone git@github.com:WoWaster/spbu-tt-diff-notify.git
+  git clone git@github.com:WoWaster/Geraltt.git
 ```
 
 Откройте проект:
