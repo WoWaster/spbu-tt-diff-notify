@@ -19,6 +19,9 @@ jobs:
       - name: Install Formatter
         run: rustup component add rustfmt
 
+      - name: Install Clippy
+        run: rustup component add clippy
+
       - name: Install Tarpaulin
         run: cargo install cargo-tarpaulin
 
