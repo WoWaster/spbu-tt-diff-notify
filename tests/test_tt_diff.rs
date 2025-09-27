@@ -141,11 +141,21 @@ async fn test_main(old_ev_path: &str, new_ev_path: &str, diff_exp: &str) {
     let warhol_envelope = Envelope::new(Some(sender_address), recipients_addresses).unwrap();
 
     let warhol_email = Message::builder()
-    .from(format!("{} <{}>", config.email_sender_fullname, config.email_sender_username).parse().unwrap())
-    .to("Энди Уорхол <campbellsoupthebest@gmail.com>".parse().unwrap())
-    .subject("Изменилось расписание преподавателя!")
-    .header(ContentType::TEXT_HTML)
-    .body(String::from(diff_exp)).unwrap();
+        .from(
+            format!(
+                "{} <{}>",
+                config.email_sender_fullname, config.email_sender_username
+            )
+            .parse()
+            .unwrap(),
+        )
+        .to("Энди Уорхол <campbellsoupthebest@gmail.com>"
+            .parse()
+            .unwrap())
+        .subject("Изменилось расписание преподавателя!")
+        .header(ContentType::TEXT_HTML)
+        .body(String::from(diff_exp))
+        .unwrap();
 
     let warhol_contents = String::from_utf8(warhol_email.formatted()).unwrap();
 
