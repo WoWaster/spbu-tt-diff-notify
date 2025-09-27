@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod educator_model;
 
-/// A model for describing users of the tool. 
+/// A model for describing users of the tool.
 /// Consists of:
 /// 1. User's name. Should be full, because it will be written in the beginning of the letter
 /// 2. IDs of educators that user watches
@@ -19,7 +19,7 @@ pub struct User {
     pub email: String,
 }
 
-/// A model for describing ARGS of the tool. 
+/// A model for describing ARGS of the tool.
 /// Consists of:
 /// 1. Path to user.json, that provides the info about users who will receive notifications and the list of watched educators for each one of them.
 /// 2. Path to config.json, that contains email sender configuration parameters.
@@ -35,7 +35,7 @@ pub struct Args {
     pub previous_events_json_path: PathBuf,
 }
 
-/// A model for describing configuration of the tool. 
+/// A model for describing configuration of the tool.
 /// Consists of:
 /// 1. SMTP server address
 /// 2. Email address from which the letters will be sent

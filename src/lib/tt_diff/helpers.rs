@@ -32,7 +32,7 @@ pub fn get_users(args: &Args) -> Result<Vec<User>, Box<dyn Error>> {
     Ok(users)
 }
 
-/// Extracts the state of schedule, saved during the previous Geraltt launch, 
+/// Extracts the state of schedule, saved during the previous Geraltt launch,
 /// from ARGS structure into map with {educator ID: their old schedule} structure.
 pub fn get_previous_events(args: &Args) -> Result<BTreeMap<u32, EducatorEvents>, Box<dyn Error>> {
     info!(
@@ -240,7 +240,7 @@ pub fn generate_email(config: &Config, user: &User, diff: &str) -> Result<Messag
     Ok(email)
 }
 
-/// Updates previous_events.json, so that during the next Geraltt launch, 
+/// Updates previous_events.json, so that during the next Geraltt launch,
 /// it will contain information about the most recent state of the schedule.
 pub fn write_previous_events(
     args: &Args,
