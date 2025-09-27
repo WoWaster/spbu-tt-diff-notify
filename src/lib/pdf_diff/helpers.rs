@@ -11,8 +11,7 @@ use std::{
 
 use crate::pdf_diff::models::{Args, Config, Table, User};
 
-pub fn log_all_users(users: &[User]) -> () {
-    //println!("length: {:?}", users.len());
+pub fn log_all_users(users: &[User]) {
     for user in users.iter() {
         debug!(
             "Serving {}, who is watching tables {:?}",
@@ -22,7 +21,6 @@ pub fn log_all_users(users: &[User]) -> () {
 }
 
 pub fn get_users(args: &Args) -> Result<Vec<User>, Box<dyn Error>> {
-    //println!("inside get_users {:?}", &args.users_json_path);
     info!(
         "Reading users.json from {}",
         std::fs::canonicalize(&args.users_json_path)?.display()
@@ -33,8 +31,7 @@ pub fn get_users(args: &Args) -> Result<Vec<User>, Box<dyn Error>> {
     Ok(users)
 }
 
-/* not sure if this is needed */
-pub fn log_all_tables(tables: &[Table]) -> () {
+pub fn log_all_tables(tables: &[Table]) {
     println!("length: {:?}", tables.len());
     for table in tables.iter() {
         debug!("Got table {}", table.table_name);

@@ -27,7 +27,7 @@ pub struct TestGetter {
 }
 
 impl ScheduleGetter for TestGetter {
-    async fn get_schedule(&self, _users: &Vec<User>) -> BTreeMap<u32, EducatorEvents> {
+    async fn get_schedule(&self, _users: &[User]) -> BTreeMap<u32, EducatorEvents> {
         let mock_site = Args {
             users_json_path: PathBuf::from("_"),
             config_json_path: PathBuf::from("_"),

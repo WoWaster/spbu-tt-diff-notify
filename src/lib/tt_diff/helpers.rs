@@ -11,7 +11,7 @@ use super::models::{
 };
 
 /// Logs info about all users that are being served in current Geraltt launch.
-pub fn log_all_users(users: &[User]) -> () {
+pub fn log_all_users(users: &[User]) {
     for user in users.iter() {
         debug!(
             "Serving {}, who is watching for educators {:?} and groups {:?}",
@@ -89,7 +89,7 @@ fn format_event_as_string(event: &DayStudyEvent) -> String {
 /// If current day isn't empty, formats it into HTML string with "New day:" description.
 fn add_day_to_diff(cur_educator_diff: &mut Vec<String>, educator_day: &EducatorDay) {
     if educator_day.day_study_events_count != 0 {
-        cur_educator_diff.push(format!("<em style=\"color:green;\">Новый день:</em>"));
+        cur_educator_diff.push("<em style=\"color:green;\">Новый день:</em>".to_string());
         cur_educator_diff.push(format!(
             "<b><font size=\"5\">{}:</font></b><br>{}",
             educator_day.day_string,
@@ -116,7 +116,7 @@ fn diff_educator_day(old_day: &EducatorDay, new_day: &EducatorDay) -> (Vec<Strin
     for event in removed_events {
         removed_acc.push(format_event_as_string(event));
     }
-    if removed_acc.len() > 0 {
+    if !removed_acc.is_empty() {
         removed_acc.insert(
             0,
             "<em style=\"color:red;\">Удалённые события:</em>".to_string(),
@@ -126,13 +126,13 @@ fn diff_educator_day(old_day: &EducatorDay, new_day: &EducatorDay) -> (Vec<Strin
     for event in added_events {
         added_acc.push(format_event_as_string(event));
     }
-    if added_acc.len() > 0 {
+    if !added_acc.is_empty() {
         added_acc.insert(
             0,
             "<em style=\"color:green;\">Новые события:</em>".to_string(),
         )
     }
-    return (removed_acc, added_acc);
+    (removed_acc, added_acc)
 }
 
 /// Find all changes of a certain educator, that was previously tracked (meaning that their old events need to be compared with new ones).
@@ -150,7 +150,7 @@ fn add_tracked_educator_to_diff<'a>(
 
         match old_day.day_study_events_count {
             0 => {
-                if !(new_day.day_study_events_count == 0) {
+                if new_day.day_study_events_count != 0 {
                     add_day_to_diff(&mut cur_educator_diff, new_day)
                 }
             }
@@ -158,7 +158,7 @@ fn add_tracked_educator_to_diff<'a>(
                 let (removed, added) = diff_educator_day(old_day, new_day);
                 let mut combined = added.clone();
                 combined.extend(removed);
-                if combined.len() > 0 {
+                if !combined.is_empty() {
                     cur_educator_diff.push(format!(
                         "<b><font size=\"5\">{}:</font></b>",
                         new_day.day_string,
@@ -173,7 +173,7 @@ fn add_tracked_educator_to_diff<'a>(
 
 /// If an educator was untracked before, meaning that there are no previous events for them provided,
 /// Geraltt adds all of their current events to difference.
-fn add_untracked_educator_to_diff<'a>(educator_events: &'a EducatorEvents) -> Vec<String> {
+fn add_untracked_educator_to_diff(educator_events: &EducatorEvents) -> Vec<String> {
     let mut cur_educator_diff = Vec::new();
 
     for new_day in &educator_events.educator_events_days {
@@ -195,7 +195,7 @@ pub fn generate_diff_messages<'a>(
             Some(old_events) => add_tracked_educator_to_diff(old_events, new_events),
             None => add_untracked_educator_to_diff(new_events),
         };
-        if educator_diff.len() > 0 {
+        if !educator_diff.is_empty() {
             educators_new_w_messages.insert(educator_id, (new_events, educator_diff.join("<br>")));
         }
     }
@@ -219,7 +219,7 @@ pub fn collect_all_tracked_diffs(
             acc.push(cur_ed_diff);
         }
     }
-    return acc.join("<br> <br>");
+    acc.join("<br> <br>")
 }
 
 /// Builds an email from sender email info, user email info and string of difference of watched educators for said user.
@@ -233,9 +233,7 @@ pub fn generate_email(config: &Config, user: &User, diff: &str) -> Result<Messag
             .parse()?,
         )
         .to(format!("{} <{}>", user.name, user.email).parse()?)
-        .subject(format!(
-            "Изменилось расписание преподавателя!"
-        ))
+        .subject("Изменилось расписание преподавателя!".to_string())
         .header(ContentType::TEXT_HTML)
         .body(format!("Уважаемый(ая) {}!<br><br> {} <br> Данное письмо было сгенерировано автоматически, направление ответа не подразумевается.", user.name, diff))?;
 
