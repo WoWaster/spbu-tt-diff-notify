@@ -9,12 +9,13 @@ use super::{
     models::{educator_model::EducatorEvents, User},
 };
 
-// probably do smth about this warning later
+/// A trait, necessary for every entity that will be used for getting actual schedule.
 #[allow(async_fn_in_trait)]
 pub trait ScheduleGetter {
     async fn get_schedule(&self, users: &Vec<User>) -> BTreeMap<u32, EducatorEvents>;
 }
 
+/// Allows to use Client for getting actual schedule via requests to TimeTable resource.
 impl ScheduleGetter for Client {
     async fn get_schedule(&self, users: &Vec<User>) -> BTreeMap<u32, EducatorEvents> {
         let watched_educators = users

@@ -5,7 +5,12 @@ use serde::{Deserialize, Serialize};
 
 pub mod educator_model;
 
-/// Model for `users.json`
+/// A model for describing users of the tool. 
+/// Consists of:
+/// 1. User's name. Should be full, because it will be written in the beginning of the letter
+/// 2. IDs of educators that user watches
+/// 3. IDs of groups that user watches
+/// 4. User's email address to which they will receive letters
 #[derive(Debug, Deserialize, Serialize)]
 pub struct User {
     pub name: String,
@@ -14,6 +19,11 @@ pub struct User {
     pub email: String,
 }
 
+/// A model for describing ARGS of the tool. 
+/// Consists of:
+/// 1. Path to user.json, that provides the info about users who will receive notifications and the list of watched educators for each one of them.
+/// 2. Path to config.json, that contains email sender configuration parameters.
+/// 3. Path to previous_events.json, that contains the information about schedule state at the time of the last Geraltt's launch.
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct Args {
@@ -25,6 +35,12 @@ pub struct Args {
     pub previous_events_json_path: PathBuf,
 }
 
+/// A model for describing configuration of the tool. 
+/// Consists of:
+/// 1. SMTP server address
+/// 2. Email address from which the letters will be sent
+/// 3. Email sender display name, that will be shown in the letter
+/// 4. Password for email account from which the letters will be sent
 #[derive(Deserialize)]
 pub struct Config {
     pub email_relay: String,

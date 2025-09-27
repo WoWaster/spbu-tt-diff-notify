@@ -10,6 +10,7 @@ use super::{
     models::{educator_model::EducatorEvents, Config, User},
 };
 
+/// A trait, necessary for every entity that will build and send letters.
 pub trait LetterSender {
     fn form_and_send_letters(
         self,
@@ -19,6 +20,7 @@ pub trait LetterSender {
     );
 }
 
+/// Allows SmtpTransport to form and send letters via its native send method.
 impl LetterSender for SmtpTransport {
     fn form_and_send_letters(
         self,
