@@ -63,6 +63,13 @@ Run it with Cargo:
 
 You might also want to set up automatic launch at certain time intervals for greater convenience.
 
+## Docs
+
+Docs of the project can be generated via:
+```bash
+  cargo doc --open
+```
+
 ## License
 
 This project is distributed under the MIT License (check LICENSE for more info)

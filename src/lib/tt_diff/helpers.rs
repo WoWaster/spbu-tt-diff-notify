@@ -10,7 +10,8 @@ use super::models::{
     Args, Config, User,
 };
 
-pub fn log_all_users(users: &[User]) -> () {
+/// Logs info about all users that are being served in current Geraltt launch.
+pub fn log_all_users(users: &[User]) {
     for user in users.iter() {
         debug!(
             "Serving {}, who is watching for educators {:?} and groups {:?}",
@@ -19,6 +20,7 @@ pub fn log_all_users(users: &[User]) -> () {
     }
 }
 
+/// Extracts users from ARGS structure into Vec.
 pub fn get_users(args: &Args) -> Result<Vec<User>, Box<dyn Error>> {
     info!(
         "Reading users.json from {}",
@@ -30,6 +32,8 @@ pub fn get_users(args: &Args) -> Result<Vec<User>, Box<dyn Error>> {
     Ok(users)
 }
 
+/// Extracts the state of schedule, saved during the previous Geraltt launch,
+/// from ARGS structure into map with {educator ID: their old schedule} structure.
 pub fn get_previous_events(args: &Args) -> Result<BTreeMap<u32, EducatorEvents>, Box<dyn Error>> {
     info!(
         "Reading previous events from {}",
@@ -48,6 +52,7 @@ pub fn get_previous_events(args: &Args) -> Result<BTreeMap<u32, EducatorEvents>,
     }
 }
 
+/// Requests schedule of given educator from TimeTable resourse by their ID.
 pub async fn get_educator_events_by_id(
     http_client: &Client,
     id: u32,
@@ -59,7 +64,7 @@ pub async fn get_educator_events_by_id(
     Ok((educator.educator_master_id.to_owned(), educator))
 }
 
-/* form string of information about changed event */
+/// Builds string of information about changed event in HTML format.
 fn format_event_as_string(event: &DayStudyEvent) -> String {
     format!(
         "    <b>Предмет:</b> {}<br>    <b>Время:</b> {}<br>    <b>Даты:</b> {}<br>    <b>Места:</b> {}<br>    <b>Направления:</b> {}<br>",
@@ -81,9 +86,10 @@ fn format_event_as_string(event: &DayStudyEvent) -> String {
     )
 }
 
+/// If current day isn't empty, formats it into HTML string with "New day:" description.
 fn add_day_to_diff(cur_educator_diff: &mut Vec<String>, educator_day: &EducatorDay) {
     if educator_day.day_study_events_count != 0 {
-        cur_educator_diff.push(format!("<em style=\"color:green;\">Новый день:</em>"));
+        cur_educator_diff.push("<em style=\"color:green;\">Новый день:</em>".to_string());
         cur_educator_diff.push(format!(
             "<b><font size=\"5\">{}:</font></b><br>{}",
             educator_day.day_string,
@@ -97,6 +103,8 @@ fn add_day_to_diff(cur_educator_diff: &mut Vec<String>, educator_day: &EducatorD
     }
 }
 
+/// Finds differences between old and new events of the same day and sormats them into strings.
+/// The differences are divided into deleted and added events, both with corresponding message.
 fn diff_educator_day(old_day: &EducatorDay, new_day: &EducatorDay) -> (Vec<String>, Vec<String>) {
     let old_events = &old_day.day_study_events;
     let new_events = &new_day.day_study_events;
@@ -108,7 +116,7 @@ fn diff_educator_day(old_day: &EducatorDay, new_day: &EducatorDay) -> (Vec<Strin
     for event in removed_events {
         removed_acc.push(format_event_as_string(event));
     }
-    if removed_acc.len() > 0 {
+    if !removed_acc.is_empty() {
         removed_acc.insert(
             0,
             "<em style=\"color:red;\">Удалённые события:</em>".to_string(),
@@ -118,15 +126,18 @@ fn diff_educator_day(old_day: &EducatorDay, new_day: &EducatorDay) -> (Vec<Strin
     for event in added_events {
         added_acc.push(format_event_as_string(event));
     }
-    if added_acc.len() > 0 {
+    if !added_acc.is_empty() {
         added_acc.insert(
             0,
             "<em style=\"color:green;\">Новые события:</em>".to_string(),
         )
     }
-    return (removed_acc, added_acc);
+    (removed_acc, added_acc)
 }
 
+/// Find all changes of a certain educator, that was previously tracked (meaning that their old events need to be compared with new ones).
+/// Returns Vec<String>, that contains all
+/// information about change days (both added and deleted events with corresponding messages).
 fn add_tracked_educator_to_diff<'a>(
     educator_old_events: &'a EducatorEvents,
     educator_new_events: &'a EducatorEvents,
@@ -139,7 +150,7 @@ fn add_tracked_educator_to_diff<'a>(
 
         match old_day.day_study_events_count {
             0 => {
-                if !(new_day.day_study_events_count == 0) {
+                if new_day.day_study_events_count != 0 {
                     add_day_to_diff(&mut cur_educator_diff, new_day)
                 }
             }
@@ -147,7 +158,7 @@ fn add_tracked_educator_to_diff<'a>(
                 let (removed, added) = diff_educator_day(old_day, new_day);
                 let mut combined = added.clone();
                 combined.extend(removed);
-                if combined.len() > 0 {
+                if !combined.is_empty() {
                     cur_educator_diff.push(format!(
                         "<b><font size=\"5\">{}:</font></b>",
                         new_day.day_string,
@@ -160,7 +171,9 @@ fn add_tracked_educator_to_diff<'a>(
     cur_educator_diff
 }
 
-fn add_untracked_educator_to_diff<'a>(educator_events: &'a EducatorEvents) -> Vec<String> {
+/// If an educator was untracked before, meaning that there are no previous events for them provided,
+/// Geraltt adds all of their current events to difference.
+fn add_untracked_educator_to_diff(educator_events: &EducatorEvents) -> Vec<String> {
     let mut cur_educator_diff = Vec::new();
 
     for new_day in &educator_events.educator_events_days {
@@ -170,20 +183,19 @@ fn add_untracked_educator_to_diff<'a>(educator_events: &'a EducatorEvents) -> Ve
     cur_educator_diff
 }
 
+/// Builds map with {educator ID: (their changed events, info about their changed events formatted into HTML string)}.
 pub fn generate_diff_messages<'a>(
     educators_old: &'a BTreeMap<u32, EducatorEvents>,
     educators_new: &'a BTreeMap<u32, EducatorEvents>,
 ) -> BTreeMap<u32, (&'a EducatorEvents, String)> {
     let mut educators_new_w_messages = BTreeMap::new();
 
-    /* for every found educator look for their old events,
-    if there are none, insert all their events into the diff */
     for (&educator_id, new_events) in educators_new {
         let educator_diff = match educators_old.get(&educator_id) {
             Some(old_events) => add_tracked_educator_to_diff(old_events, new_events),
             None => add_untracked_educator_to_diff(new_events),
         };
-        if educator_diff.len() > 0 {
+        if !educator_diff.is_empty() {
             educators_new_w_messages.insert(educator_id, (new_events, educator_diff.join("<br>")));
         }
     }
@@ -191,6 +203,8 @@ pub fn generate_diff_messages<'a>(
     educators_new_w_messages
 }
 
+/// Finds all educators with changed schedules, that certain user watches,
+/// and concats info about their changes into one HTML string.
 pub fn collect_all_tracked_diffs(
     educators_changed: &BTreeMap<u32, (&EducatorEvents, String)>,
     user: &User,
@@ -205,9 +219,10 @@ pub fn collect_all_tracked_diffs(
             acc.push(cur_ed_diff);
         }
     }
-    return acc.join("<br> <br>");
+    acc.join("<br> <br>")
 }
 
+/// Builds an email from sender email info, user email info and string of difference of watched educators for said user.
 pub fn generate_email(config: &Config, user: &User, diff: &str) -> Result<Message, Box<dyn Error>> {
     let email = Message::builder()
         .from(
@@ -218,15 +233,15 @@ pub fn generate_email(config: &Config, user: &User, diff: &str) -> Result<Messag
             .parse()?,
         )
         .to(format!("{} <{}>", user.name, user.email).parse()?)
-        .subject(format!(
-            "Изменилось расписание преподавателя!"
-        ))
+        .subject("Изменилось расписание преподавателя!".to_string())
         .header(ContentType::TEXT_HTML)
         .body(format!("Уважаемый(ая) {}!<br><br> {} <br> Данное письмо было сгенерировано автоматически, направление ответа не подразумевается.", user.name, diff))?;
 
     Ok(email)
 }
 
+/// Updates previous_events.json, so that during the next Geraltt launch,
+/// it will contain information about the most recent state of the schedule.
 pub fn write_previous_events(
     args: &Args,
     educator_events_new: BTreeMap<u32, EducatorEvents>,
